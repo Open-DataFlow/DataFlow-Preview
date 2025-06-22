@@ -1,12 +1,12 @@
 from dataflow.utils.reasoning_utils.Prompts import AnswerGeneratorPrompt
 import pandas as pd
-from dataflow.utils.registry import GENERATOR_REGISTRY
+from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow.utils.utils import get_logger
 
 from dataflow.utils.Storage import FileStorage
 from dataflow.utils.Operator import Operator
 from dataflow.utils.utils import init_model
-@GENERATOR_REGISTRY.register()
+@OPERATOR_REGISTRY.register()
 class AnswerGenerator(Operator):
     '''
     Answer Generator is a class that generates answers for given questions.
@@ -76,12 +76,10 @@ class AnswerGenerator(Operator):
         """
         Reformat the prompts in the dataframe to generate questions.
         """
-        formatted_prompts = []
-        for text in dataframe[self.input_key]:
-            used_prompt = self.prompts.Classic_COT_Prompt(text)
-            formatted_prompts.append(used_prompt.strip())
+        questions = dataframe[self.input_key].tolist()
+        inputs = [self.prompt.Classic_COT_Prompt(question) for question in questions]
 
-        return formatted_prompts
+        return inputs
 
     def run(self):
         '''
@@ -90,7 +88,7 @@ class AnswerGenerator(Operator):
         dataframe = self.datastorage.read(self.input_file, "dataframe")
         self._validate_dataframe(dataframe)
         formatted_prompts = self._reformat_prompt(dataframe)
-        answers = self.generator.generate_text_from_input(formatted_prompts)
+        answers = self.generator.generate_from_input(formatted_prompts)
 
         dataframe[self.output_key] = answers
         self.datastorage.write(self.output_file, dataframe)

@@ -1,13 +1,13 @@
 from math_verify import parse, verify
 import numpy as np
 import pandas as pd
-from dataflow.utils.registry import PROCESSOR_REGISTRY
+from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow.utils.reasoning_utils.AnswerExtraction import StringCleaner, UnitTextManager, AnswerExtractor
 from dataflow.utils.Storage import FileStorage
 from dataflow.utils.utils import get_logger
 from dataflow.utils.Operator import Operator
 
-@PROCESSOR_REGISTRY.register()
+@OPERATOR_REGISTRY.register()
 class AnswerGroundTruthFilter(Operator):
     def __init__(self, config: dict):
         self.check_config(config)
@@ -21,9 +21,14 @@ class AnswerGroundTruthFilter(Operator):
         }
         self.logger = get_logger()
         self.compare = name2compare[config.get('compare_method', 'exact')]
+        self.datastorage = FileStorage(config)
+        self.input_file = config['input_file']
+        self.output_file = config['output_file']
+        self.test_answer_key = config['test_answer_key']
+        self.gt_answer_key = config['gt_answer_key']
 
     def check_config(self, config: dict) -> None:
-        required_keys = ['input_file', 'output_file', 'generator_type']
+        required_keys = ['input_file', 'output_file', 'test_answer_key', 'gt_answer_key']
         missing_keys = [key for key in required_keys if key not in config]
         if missing_keys:
             raise ValueError(f"Missing required config keys: {missing_keys}")
@@ -43,8 +48,8 @@ class AnswerGroundTruthFilter(Operator):
     def run(self):
         dataframe = self.datastorage.read(self.input_file, "dataframe")
         output = []
-        answers = dataframe['answer']
-        ground_truths = dataframe['ground_truth']
+        answers = dataframe[self.test_answer_key]
+        ground_truths = dataframe[self.gt_answer_key]
         for i in range(len(answers)):
             final_answer =  self.answer_extractor.extract_answer(answers[i], None)
             if self.compare(final_answer, ground_truths[i]):

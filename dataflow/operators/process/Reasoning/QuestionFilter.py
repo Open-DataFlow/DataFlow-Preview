@@ -1,4 +1,4 @@
-from dataflow.utils.registry import PROCESSOR_REGISTRY
+from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow.utils.utils import get_logger
 from dataflow.utils.Operator import Operator
 from dataflow.utils.Storage import FileStorage
@@ -6,7 +6,7 @@ from dataflow.utils.reasoning_utils.Prompts import QuestionFilterPrompt
 from dataflow.utils.utils import init_model
 import re
 
-@PROCESSOR_REGISTRY.register()
+@OPERATOR_REGISTRY.register()
 class QuestionFilter(Operator):
     def __init__(self, config: dict):
         self.check_config(config)
@@ -14,7 +14,9 @@ class QuestionFilter(Operator):
         self.logger = get_logger()
         self.datastorage = FileStorage(config)
         self.generator = init_model(config)
-
+        self.input_file = config.get("input_file", "")
+        self.output_file = config.get("output_file", "")
+        self.input_key = config.get("input_key", "")
     def check_config(self, config: dict) -> None:
         required_keys = ['input_file', 'output_file', 'generator_type']
         missing_keys = [key for key in required_keys if key not in config]
@@ -77,11 +79,11 @@ class QuestionFilter(Operator):
             
     def run(self):
         dataframe = self.datastorage.read(self.input_file, "dataframe")
-        questions = dataframe[self.input_question_key]
+        questions = dataframe[self.input_key]
         inputs = [QuestionFilterPrompt().build_prompt(question) for question in questions]
         responses = self.generator.generate_from_input(inputs)
         results = [self.ResloveResponse(response) for response in responses]
         
         # 保留results为True的行
         dataframe = dataframe[results]
-        self.datastorage.write(dataframe, self.output_file)
+        self.datastorage.write(self.output_file, dataframe)

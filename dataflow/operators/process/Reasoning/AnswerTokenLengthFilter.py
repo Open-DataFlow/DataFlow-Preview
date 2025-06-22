@@ -1,15 +1,14 @@
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
-from dataflow.utils.registry import PROCESSOR_REGISTRY
+from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow.utils.utils import get_logger
 from dataflow.utils.Storage import FileStorage
 from dataflow.utils.Operator import Operator
-from math_verify import parse, verify, LatexExtractionConfig
 from transformers import AutoTokenizer
 
 
-@PROCESSOR_REGISTRY.register()
+@OPERATOR_REGISTRY.register()
 class AnswerTokenLengthFilter(Operator):
     def __init__(self, config: dict):
         self.check_config(config)
@@ -22,6 +21,7 @@ class AnswerTokenLengthFilter(Operator):
 
         self.logger = get_logger()
         self.datastorage = FileStorage(config)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_dir)
 
     def check_config(self, config: dict) -> None:
         required_keys = ['input_file', 'output_file', 'input_key', 'max_answer_token_length', 'tokenizer_dir']
@@ -87,13 +87,13 @@ class AnswerTokenLengthFilter(Operator):
             tokens = self.tokenizer.encode(input_string, add_special_tokens=False)
             return len(tokens)
 
-        valid_flags = []
-        for text in tqdm(dataframe[self.input_key], desc="Checking token lengths"):
+        output = []
+        for i, text in tqdm(enumerate(dataframe[self.input_key]), desc="Checking token lengths"):
             is_valid = get_token_count(text) <= self.max_answer_token_length
-            valid_flags.append(int(is_valid))
-
-        dataframe[self.input_key] = valid_flags
-        dataframe = dataframe[dataframe[self.input_key] == 1]
+            if is_valid:
+                output.append(dataframe.iloc[i])
+        
+        dataframe = pd.DataFrame(output)
 
         self.datastorage.write(self.output_file, dataframe)
         self.logger.info(f"Saved {len(dataframe)} filtered rows to {self.output_file}")

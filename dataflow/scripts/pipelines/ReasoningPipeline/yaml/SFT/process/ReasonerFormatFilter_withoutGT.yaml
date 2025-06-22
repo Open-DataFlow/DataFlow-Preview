@@ -1,12 +1,3 @@
-model_cache_path: '../ckpt' # Path to cache models
-dependencies: [text]
-output_file: "demos/demos_result/math/pipeline_withoutGT/format_step6.jsonl"
-
-use_hf: False # Whether to use huggingface_dataset, if used, ignore the local data path below
-dataset_name: 'yahma/alpaca-cleaned'
-dataset_split: 'train'  
-name: 'default' 
-revision: null
-input_file: 'demos/demos_result/math/pipeline_withoutGT/pseudoanswer_step5.jsonl'  # Local data path, supports json, jsonl, parquet formats
-formatter: "TextFormatter" # Data loader type
-input_keys: 'pseudo_correct_solution_example'
+output_file: "dataflow/example/ReasoningPipeline/pipeline_math_step8out_no_gt.jsonl"
+input_file: 'dataflow/example/ReasoningPipeline/pipeline_math_step7out_no_gt.jsonl'  # Local data path, supports json, jsonl, parquet formats
+input_key: 'pseudo_correct_solution_example'

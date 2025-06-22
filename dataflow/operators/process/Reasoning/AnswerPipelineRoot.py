@@ -1,13 +1,13 @@
 # 根节点，用来将数据拆入不同的分支
 import pandas as pd
 from dataflow.utils.utils import get_logger
-from dataflow.utils.registry import GENERATOR_REGISTRY
+from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow.utils.reasoning_utils.AnswerExtraction import StringCleaner, UnitTextManager, AnswerExtractor
 from dataflow.utils.Operator import Operator
 from dataflow.utils.Storage import FileStorage
 
 
-@GENERATOR_REGISTRY.register()
+@OPERATOR_REGISTRY.register()
 class AnswerPipelineRoot(Operator):
     def __init__(self, config: dict):
         self.check_config(config)
@@ -15,14 +15,13 @@ class AnswerPipelineRoot(Operator):
         self.input_file = config.get("input_file")
         self.output_file_with_gt = config.get("output_file_with_gt")
         self.output_file_without_gt = config.get("output_file_without_gt")
-        self.input_key = config.get("input_key")
         self.input_answer_key = config.get("input_answer_key")
         self.input_gt_key = config.get("input_gt_key", "")
         self.logger = get_logger()
         self.datastorage = FileStorage(config)
 
     def check_config(self, config: dict) -> None:
-        required_keys = ['input_file', 'output_file', 'generator_type']
+        required_keys = ['input_file', 'output_file_with_gt', 'output_file_without_gt']
         missing_keys = [key for key in required_keys if key not in config]
         if missing_keys:
             raise ValueError(f"Missing required config keys: {missing_keys}")

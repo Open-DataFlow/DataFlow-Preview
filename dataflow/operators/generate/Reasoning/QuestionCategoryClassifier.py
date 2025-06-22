@@ -3,14 +3,16 @@ import pandas as pd
 import json
 import os
 import re
-from dataflow.utils.registry import GENERATOR_REGISTRY
+from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow.utils.utils import get_logger
 
 from dataflow.utils.Storage import FileStorage
 from dataflow.utils.Operator import Operator
 from dataflow.utils.utils import init_model
 
-@GENERATOR_REGISTRY.register()
+from dataflow.utils.reasoning_utils.CategoryFuzz import CategoryUtils
+
+@OPERATOR_REGISTRY.register()
 class QuestionCategoryClassifier(Operator):
     def __init__(self, config: dict):
         """
@@ -92,7 +94,7 @@ class QuestionCategoryClassifier(Operator):
         dataframe = self.datastorage.read(self.input_file, "dataframe")
         self._validate_dataframe(dataframe)
         formatted_prompts = self._reformat_prompt(dataframe)
-        responses = self.model.generate_text_from_input(formatted_prompts)
+        responses = self.generator.generate_from_input(formatted_prompts)
 
         for (idx, row), classification_str in zip(dataframe.iterrows(), responses):
             try:
@@ -107,10 +109,10 @@ class QuestionCategoryClassifier(Operator):
 
                 classification = json.loads(cleaned_str)
 
-                primary_raw = classification.get("primary_category", 10)
-                secondary_raw = classification.get("secondary_category", 90)
+                primary_raw = classification.get("primary_category", "")
+                secondary_raw = classification.get("secondary_category", "")
 
-                category_info = normalize_categories(primary_raw, secondary_raw)
+                category_info = CategoryUtils().normalize_categories(raw_primary=primary_raw, raw_secondary=secondary_raw)
 
                 dataframe.at[idx, "primary_category"] = category_info["primary_category"]
                 dataframe.at[idx, "secondary_category"] = category_info["secondary_category"]

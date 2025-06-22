@@ -1,5 +1,5 @@
-output_file: "demos/demos_result/math/pipeline_GT/length_gt_step7.jsonl"
-input_file: 'demos/demos_result/math/pipeline_GT/format_gt_step6.jsonl'  # Local data path, supports json, jsonl, parquet formats
+output_file: "dataflow/example/ReasoningPipeline/pipeline_math_step9out_gt.jsonl"
+input_file: 'dataflow/example/ReasoningPipeline/pipeline_math_step8out_gt.jsonl'  # Local data path, supports json, jsonl, parquet formats
 input_key: 'generated_cot'
 max_answer_token_length: 8192
 tokenizer_dir: 'Qwen/Qwen2.5-0.5B-Instruct'

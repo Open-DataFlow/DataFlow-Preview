@@ -157,7 +157,7 @@ class AnswerExtractor:
         """
         if not pred_str:
             pred_str = ""
-        pred_str = pred_str.replace("\u043a\u0438", "")
+        pred_str = str(pred_str).replace("\u043a\u0438", "")
         
         # Handle special cases based on data_name or pattern
         if "final answer is $" in pred_str and "$. I hope" in pred_str:

@@ -3,7 +3,6 @@ from dataflow.utils.registry import LazyLoader
 
 cur_path = "dataflow/operators/process/"
 _import_structure = {
-    "AnswerExtraction_QwenMathEval": (cur_path + "Reasoning/AnswerExtraction_QwenMathEval.py", "AnswerExtraction_QwenMathEval"),
     "AnswerFormatterFilter": (cur_path + "Reasoning/AnswerFormatterFilter.py", "AnswerFormatterFilter"),
     "AnswerGroundTruthFilter": (cur_path + "Reasoning/AnswerGroundTruthFilter.py", "AnswerGroundTruthFilter"),
     "AnswerJudger_Mathverify": (cur_path + "Reasoning/AnswerJudger_Mathverify.py", "AnswerJudger_Mathverify"),

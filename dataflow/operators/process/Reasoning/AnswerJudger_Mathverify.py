@@ -1,13 +1,13 @@
 from tqdm import tqdm
 import pandas as pd
-from dataflow.utils.registry import PROCESSOR_REGISTRY
+from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow.utils.utils import get_logger
 
 from dataflow.utils.Storage import FileStorage
 from dataflow.utils.Operator import Operator
 from math_verify import parse, verify, LatexExtractionConfig
 
-@PROCESSOR_REGISTRY.register()
+@OPERATOR_REGISTRY.register()
 class AnswerJudger_MathVerify(Operator):
     def __init__(self, config: dict):
         self.check_config(config)

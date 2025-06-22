@@ -3,3 +3,5 @@
 **/.ipynb_checkpoints/
 *.egg
 *.egg-info  
+/dataflow/example/ReasoningPipeline/pipeline_math_step*.jsonl
+!/dataflow/example/ReasoningPipeline/pipeline_math.json

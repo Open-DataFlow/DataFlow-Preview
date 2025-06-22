@@ -3,14 +3,14 @@ import pandas as pd
 import json
 import os
 import re
-from dataflow.utils.registry import GENERATOR_REGISTRY
+from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow.utils.utils import get_logger
 
 from dataflow.utils.Storage import FileStorage
 from dataflow.utils.Operator import Operator
 from dataflow.utils.utils import init_model
 
-@GENERATOR_REGISTRY.register()
+@OPERATOR_REGISTRY.register()
 class QuestionDifficultyClassifier(Operator):
     def __init__(self, config):
         """
@@ -18,11 +18,11 @@ class QuestionDifficultyClassifier(Operator):
         """
         self.check_config(config)
         self.config = config
-        self.prompts = QuestionCategoryPrompt()
+        self.prompts = QuestionDifficultyPrompt()
         self.input_file = self.config['input_file']
         self.output_file = self.config['output_file']
         self.input_key = self.config['input_key']
-        self.output_key = self.config.get("output_key", "classification_result")
+        self.output_key = self.config.get("output_key", "difficulty_score")
         self.logger = get_logger()
         
         self.generator = init_model(config)
@@ -93,7 +93,7 @@ class QuestionDifficultyClassifier(Operator):
         dataframe = self.datastorage.read(self.input_file, "dataframe")
         self._validate_dataframe(dataframe)
         formatted_prompts = self._reformat_prompt(dataframe)
-        responses = self.model.generate_text_from_input(formatted_prompts)
+        responses = self.generator.generate_from_input(formatted_prompts)
 
         rating_scores = []
         for response in responses:

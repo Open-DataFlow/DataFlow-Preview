@@ -1,5 +1,5 @@
-output_file: "demos/demos_result/math/pipeline_GT/format_gt_step6.jsonl"
-input_file: 'demos/demos_result/math/pipeline_GT/answer_generated_gt_step5.jsonl'  # Local data path, supports json, jsonl, parquet formats
-input_keys: 'generated_cot'
+output_file: "dataflow/example/ReasoningPipeline/pipeline_math_step8out_gt.jsonl"
+input_file: 'dataflow/example/ReasoningPipeline/pipeline_math_step7out_gt.jsonl'  # Local data path, supports json, jsonl, parquet formats
+input_key: 'generated_cot'
 
   

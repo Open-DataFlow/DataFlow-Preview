@@ -28,12 +28,12 @@ class FileStorage(DataFlowStorage):
     """
     def __init__(self, config: dict):
         self.config = config
-        if "input_file" not in self.config or "output_file" not in self.config:
-            raise ValueError("input/output_file are required")
-        self.input_file = self.config["input_file"]
-        self.output_file = self.config["output_file"]
-        if self.input_file == None or self.input_file == "" or self.output_file == None or self.output_file == "":
-            raise ValueError("input/output_file are required")
+        #if "input_file" not in self.config or "output_file" not in self.config:
+        #    raise ValueError("input/output_file are required")
+        #self.input_file = self.config["input_file"]
+        #self.output_file = self.config["output_file"]
+        #if self.input_file == None or self.input_file == "" or self.output_file == None or self.output_file == "":
+        #    raise ValueError("input/output_file are required")
     
     def read(self, file_path: str, type: Literal["dataframe", "dict"]) -> Any:
         """

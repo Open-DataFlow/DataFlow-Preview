@@ -1,13 +1,12 @@
 import numpy as np
 import pandas as pd
-from dataflow.utils.registry import PROCESSOR_REGISTRY
+from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow.utils.utils import get_logger
 
 from dataflow.utils.Storage import FileStorage
 from dataflow.utils.Operator import Operator
-from dataflow.utils.utils import init_model
 
-@PROCESSOR_REGISTRY.register()
+@OPERATOR_REGISTRY.register()
 class AnswerFormatterFilter(Operator):
     def __init__(self, config: dict):
         self.check_config(config)

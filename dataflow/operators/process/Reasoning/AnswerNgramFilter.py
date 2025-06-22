@@ -2,14 +2,12 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import re
-from dataflow.utils.registry import PROCESSOR_REGISTRY
+from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow.utils.utils import get_logger
 
 from dataflow.utils.Storage import FileStorage
 from dataflow.utils.Operator import Operator
-from dataflow.Eval.Text import NgramScorer
-
-@PROCESSOR_REGISTRY.register()
+@OPERATOR_REGISTRY.register()
 class AnswerNgramFilter(Operator):
     def __init__(self, config: dict):
         self.check_config(config)
@@ -22,6 +20,7 @@ class AnswerNgramFilter(Operator):
         self.max_score = self.config['max_score']
         self.logger = get_logger()
         self.datastorage = FileStorage(config)
+        self.ngrams = self.config['ngrams']
 
     def check_config(self, config: dict) -> None:
         required_keys = ['input_file', 'output_file', 'question_key', 'answer_key', 'min_score', 'max_score']

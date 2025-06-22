@@ -2,14 +2,14 @@ from dataflow.utils.reasoning_utils.Prompts import QuestionSynthesisPrompt
 import pandas as pd
 import random
 import os
-from dataflow.utils.registry import GENERATOR_REGISTRY
+from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow.utils.utils import get_logger
 
 from dataflow.utils.Storage import FileStorage
 from dataflow.utils.Operator import Operator
 from dataflow.utils.utils import init_model
 
-@GENERATOR_REGISTRY.register()
+@OPERATOR_REGISTRY.register()
 class QuestionGenerator(Operator):
     def __init__(self, config):
         """
@@ -104,7 +104,7 @@ class QuestionGenerator(Operator):
         dataframe = self.datastorage.read(self.input_file, "dataframe")
         self._validate_dataframe(dataframe)
         formatted_prompts = self._reformat_prompt(dataframe)
-        responses = self.model.generate_text_from_input(formatted_prompts)
+        responses = self.generator.generate_from_input(formatted_prompts)
 
         new_rows = pd.DataFrame({
             self.input_key: responses,
