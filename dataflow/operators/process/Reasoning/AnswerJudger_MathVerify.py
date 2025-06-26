@@ -59,10 +59,10 @@ class AnswerJudger_MathVerify(OperatorABC):
     def run(
             self,
             storage:DataFlowStorage,
-            input_key: str,
-            answer_key: str,
-            gt_key: str,
-            result_key: str,
+            input_key: str = "instruction",
+            answer_key: str = "student_answer",
+            gt_key: str = "correct_answer",
+            result_key: str = "result",
             ) -> list:
         
         self.input_key = input_key

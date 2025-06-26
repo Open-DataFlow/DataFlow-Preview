@@ -4,7 +4,7 @@ from .PseudoAnswerGenerator import PseudoAnswerGenerator
 from .QuestionCategoryClassifier import QuestionCategoryClassifier
 from .QuestionDifficultyClassifier import QuestionDifficultyClassifier
 from .QuestionGenerator import QuestionGenerator
-
+from .PretrainFormatConverter import PretrainFormatConverter
 
 __all__ = [
     "AnswerExtraction_QwenMathEval",
@@ -13,4 +13,5 @@ __all__ = [
     "QuestionCategoryClassifier",
     "QuestionDifficultyClassifier",
     "QuestionGenerator",
+    "PretrainFormatConverter"
 ]

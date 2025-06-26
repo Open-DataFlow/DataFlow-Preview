@@ -10,8 +10,14 @@ import re
 
 @OPERATOR_REGISTRY.register()
 class AnswerNgramFilter(OperatorABC):
-    def __init__(self):
-
+    def __init__(self,
+                min_score: float = 0.1,
+                max_score: float = 1.0,
+                ngrams: int = 5):
+        
+        self.min_score = min_score
+        self.max_score = max_score
+        self.ngrams = ngrams
         self.logger = get_logger()
         
     @staticmethod
@@ -59,16 +65,10 @@ class AnswerNgramFilter(OperatorABC):
             self,
             storage: DataFlowStorage,
             question_key: str = "instruction",
-            answer_key: str = "generated_cot",
-            min_score: float = 0.1,
-            max_score: float = 1.0,
-            ngrams: int = 5
+            answer_key: str = "generated_cot"
             ) -> list:
         self.question_key = question_key
         self.answer_key = answer_key
-        self.min_score = min_score
-        self.max_score = max_score
-        self.ngrams = ngrams
         
         dataframe = storage.read("dataframe")
         self.logger.info(f"Found {len(dataframe)} rows in the dataframe")

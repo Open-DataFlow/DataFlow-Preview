@@ -83,7 +83,7 @@ class QuestionDifficultyClassifier(OperatorABC):
             output_key=self.output_key
         )
         formatted_prompts = self._reformat_prompt(dataframe, input_key=self.input_key)
-        responses = self.llm_serving.generate_from_input(input=formatted_prompts)
+        responses = self.llm_serving.generate_from_input(user_inputs=formatted_prompts)
 
         rating_scores = []
         for response in responses:

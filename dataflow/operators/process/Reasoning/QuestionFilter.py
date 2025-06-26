@@ -71,12 +71,12 @@ class QuestionFilter(OperatorABC):
             self.logger.error(f"Response format error for problem: {response}. Error: {e}")
             return False
             
-    def run(self, storage: DataFlowStorage, input_key: str ) -> list:
+    def run(self, storage: DataFlowStorage, input_key: str = "math_problem") -> list:
         self.input_key = input_key
         dataframe = storage.read("dataframe")
         questions = dataframe[input_key]
         inputs = [QuestionFilterPrompt().build_prompt(question) for question in questions]
-        responses = self.llm_serving.generate_from_input(input=inputs, system_prompt=self.system_prompt)
+        responses = self.llm_serving.generate_from_input(user_inputs=inputs, system_prompt=self.system_prompt)
         results = [self.ResolveResponse(response) for response in responses]
         
         # 保留results为True的行

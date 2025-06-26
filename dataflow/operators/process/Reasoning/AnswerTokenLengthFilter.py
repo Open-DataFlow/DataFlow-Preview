@@ -9,8 +9,13 @@ import pandas as pd
 
 @OPERATOR_REGISTRY.register()
 class AnswerTokenLengthFilter(OperatorABC):
-    def __init__(self):
-
+    def __init__(self,
+                max_answer_token_length: int = 8192,
+                tokenizer_dir: str = "Qwen/Qwen2.5-0.5B-Instruct"):
+        
+        self.max_answer_token_length = max_answer_token_length
+        self.tokenizer_dir = tokenizer_dir
+        self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_dir)
         self.logger = get_logger()
        
     @staticmethod
@@ -58,17 +63,12 @@ class AnswerTokenLengthFilter(OperatorABC):
     def run(
             self,
             storage:DataFlowStorage,
-            input_key: str = "generated_cot",
-            max_answer_token_length: int = 8192,
-            tokenizer_dir: str = "Qwen/Qwen2.5-0.5B-Instruct"
+            input_key: str = "generated_cot"
             ) -> list:
         
         dataframe = storage.read("dataframe")
         
         self.input_key = input_key
-        self.max_answer_token_length = max_answer_token_length
-        self.tokenizer_dir = tokenizer_dir
-        self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_dir)
         self.logger.info(f"Found {len(dataframe)} rows in the dataframe")
         self._validate_dataframe(dataframe)
 

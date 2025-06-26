@@ -2,6 +2,7 @@ import sys
 from dataflow.utils.registry import LazyLoader
 from .Reasoning import *
 #from .KnowledgeCleaning import *
+from .AgenticRAG import *
 
 cur_path = "dataflow/operators/generate/"
 _import_structure = {
@@ -14,6 +15,9 @@ _import_structure = {
     "CorpusTextSplitter": (cur_path + "KnowledgeCleaning/CorpusTextSplitter.py", "CorpusTextSplitter"),
     "KnowledgeExtractor": (cur_path + "KnowledgeCleaning/KnowledgeExtractor.py", "KnowledgeExtractor"),
     "KnowledgeCleaner": (cur_path + "KnowledgeCleaning/KnowledgeCleaner.py", "KnowledgeCleaner"),
+    "AutoPromptGenerator": (cur_path + "AgenticRAG/AutoPromptGenerator.py", "AutoPromptGenerator"),
+    "QAScorer": (cur_path + "AgenticRAG/QAScorer.py", "QAScorer"),
+    "QAGenerator": (cur_path + "AgenticRAG/QAGenerator.py", "QAGenerator"),
 }
 
 sys.modules[__name__] = LazyLoader(__name__, "dataflow/operators/generate/", _import_structure)

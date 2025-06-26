@@ -114,7 +114,9 @@ class APILLMServing_request(LLMServingABC):
         self.datastorage.write(self.config['output_file'], raw_dataframe)
         return
     """
-    def generate_from_input(self, input: list[str], system_prompt: str = "") -> list[str]:
+    def generate_from_input(self, 
+                            user_inputs: list[str], system_prompt: str = "You are a helpful assistant"
+                            ) -> list[str]:
         def api_chat_with_id(system_info: str, messages: str, model: str, id):
             try:
                 payload = json.dumps({
@@ -143,7 +145,7 @@ class APILLMServing_request(LLMServingABC):
             except Exception as e:
                 logging.error(f"API request error: {e}")
                 return id,None
-        responses = [None] * len(input)
+        responses = [None] * len(user_inputs)
         # -- end of subfunction api_chat_with_id --
 
         # 使用 ThreadPoolExecutor 并行处理多个问题
@@ -156,7 +158,7 @@ class APILLMServing_request(LLMServingABC):
                     messages = question,
                     model = self.model_name,
                     id = idx
-                ) for idx, question in enumerate(input)
+                ) for idx, question in enumerate(user_inputs)
             ]
             for future in tqdm(as_completed(futures), total=len(futures), desc="Generating......"):
                     response = future.result() # (id, response)

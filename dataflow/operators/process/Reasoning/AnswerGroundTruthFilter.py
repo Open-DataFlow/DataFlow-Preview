@@ -9,7 +9,14 @@ import pandas as pd
 
 @OPERATOR_REGISTRY.register()
 class AnswerGroundTruthFilter(OperatorABC):
-    def __init__(self):
+    def __init__(self,
+                compare_method: Literal["math_verify", "exact"] = "math_verify"):
+        
+        name2compare = {
+            'exact': self.exact_compare,
+            'math_verify': self.math_verify_compare
+        }
+        self.compare = name2compare[compare_method]
         unit_manager = UnitTextManager()
         string_cleaner = StringCleaner(unit_manager)
         self.answer_extractor = AnswerExtractor(string_cleaner)
@@ -57,18 +64,11 @@ class AnswerGroundTruthFilter(OperatorABC):
             self,
             storage:DataFlowStorage,
             test_answer_key: str = "generated_cot",
-            gt_answer_key: str = "golden_answer",
-            compare_method: Literal["math_verify", "exact"] = "math_verify",
+            gt_answer_key: str = "golden_answer"
             ) -> list:
-        
-        name2compare = {
-            'exact': self.exact_compare,
-            'math_verify': self.math_verify_compare
-        }
         
         self.test_answer_key = test_answer_key
         self.gt_answer_key = gt_answer_key
-        self.compare = name2compare[compare_method]
         
         dataframe = storage.read("dataframe")
         output = []

@@ -14,3 +14,4 @@ colorlog
 appdirs
 datasketch
 modelscope
+addict

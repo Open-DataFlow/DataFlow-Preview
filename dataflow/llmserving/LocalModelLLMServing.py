@@ -8,7 +8,7 @@ class LocalModelLLMServing(LLMServingABC):
     A class for generating text using vllm, with model from huggingface or local directory
     '''
     def __init__(self, 
-                 device: str = "cuda",
+                 tensor_parallel_size: int = 1,
                  model_name_or_path: str = None,
                  cache_dir: str = None,
                  temperature: float = 0.7,
@@ -17,7 +17,6 @@ class LocalModelLLMServing(LLMServingABC):
                  top_k: int = 40,
                  repetition_penalty: float = 1.0,
                  seed: int = 42,
-                 system_prompt: str = "You are a helpful assistant",
                  download_dir: str = "./ckpt/models/",
                  max_model_len: int = 4096,
                  model_source: str= "remote",
@@ -48,11 +47,9 @@ class LocalModelLLMServing(LLMServingABC):
         )
         self.llm = LLM(
             model=self.real_model_path,
-            device=device,
+            tensor_parallel_size=tensor_parallel_size,
             max_model_len=max_model_len,
         )
-        self.system_prompt = system_prompt
-
     def generate(self):
         # # read input file : accept jsonl file only
         # dataframe = self.datastorage.read(self.input_file, "dataframe")
@@ -74,8 +71,11 @@ class LocalModelLLMServing(LLMServingABC):
         pass
     
     
-    def generate_from_input(self,questions: list[str]) -> list[str]:
-        full_prompts = [self.system_prompt + '\n' + question for question in questions]
+    def generate_from_input(self, 
+                            user_inputs: list[str], 
+                            system_prompt: str = "You are a helpful assistant"
+                            ) -> list[str]:
+        full_prompts = [system_prompt + '\n' + question for question in user_inputs]
         responses = self.llm.generate(full_prompts, self.sampling_params)
         return [output.outputs[0].text for output in responses]
     

@@ -21,25 +21,23 @@ class RemoteDataLoader():
             cache_type="jsonl",
         )
 
-        self.answer_ngram_filter_step1 = AnswerNgramFilter()
+        self.answer_ngram_filter_step1 = AnswerNgramFilter(
+            min_score = 0.1,
+            max_score = 1.0,
+            ngrams = 5
+        )
         
     def forward(self):
         self.answer_ngram_filter_step1.run(
             storage = self.storage_1.step(),
             question_key = "question",
-            answer_key = "answer",
-            min_score = 0.1,
-            max_score = 1.0,
-            ngrams = 5
+            answer_key = "answer"
         )
 
         self.answer_ngram_filter_step1.run(
             storage = self.storage_2.step(),
             question_key = "question",
-            answer_key = "answer",
-            min_score = 0.1,
-            max_score = 1.0,
-            ngrams = 5
+            answer_key = "answer"
         )
         
         

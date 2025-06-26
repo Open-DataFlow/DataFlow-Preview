@@ -14,7 +14,7 @@ class LLMServingABC(ABC):
         pass
     
     @abstractmethod
-    def generate_from_input(self, input: List[str], system_prompt: str) -> List[str]:
+    def generate_from_input(self, user_inputs: List[str], system_prompt: str) -> List[str]:
         """
         Generate data from input.
         input: List[str], the input of the generator
