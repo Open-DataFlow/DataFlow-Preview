@@ -8,15 +8,39 @@ from dataflow.utils.storage import DataFlowStorage
 @OPERATOR_REGISTRY.register()
 class QuratingFilter(OperatorABC):
 
-    def __init__(self, min_scores: dict, max_scores: dict, scorer_args: dict = None):
+    def __init__(self, min_scores: dict = None, max_scores: dict = None, scorer_args: dict = None):
         self.logger = get_logger()
+
+        # Set default values if arguments are not provided
+        if min_scores is None:
+            min_scores = {
+                'writing_style': 0,
+                'required_expertise': 0,
+                'facts_and_trivia': 0,
+                'educational_value': 0
+            }
         self.min_scores = min_scores
+        if max_scores is None:
+            max_scores = {
+                'writing_style': 9,
+                'required_expertise': 9,
+                'facts_and_trivia': 9,
+                'educational_value': 9
+            }
         self.max_scores = max_scores
-        
-        # Initialize the scorer with provided arguments
         if scorer_args is None:
-            scorer_args = {}
-        self.scorer = QuratingScorer(scorer_args)
+            scorer_args = {
+                'model': 'princeton-nlp/QuRater-1.3B',
+                'tokens_field': 'input_ids',
+                'tokens': 512,
+                'map_batch_size': 512,
+                'num_workers': 1,
+                'device_batch_size': 16,
+                'device': 'cuda',
+                'labels': ['writing_style', 'required_expertise', 'facts_and_trivia', 'educational_value']
+            }
+        
+        self.scorer = QuratingScorer(**scorer_args)
         self.filter_name = 'QuratingFilter'
         self.logger.info(f"Initializing {self.filter_name} with min_scores={self.min_scores} and max_scores={self.max_scores}...")
 
@@ -28,14 +52,13 @@ class QuratingFilter(OperatorABC):
         self.logger.info(f"Start evaluating {self.filter_name}...")
         
         # Get the scores using the scorer
-        _, scores = self.scorer(dataframe[input_key])
+        scores = self.scorer.eval(dataframe, input_key)
 
         # Return the scores for filtering
         return scores
 
-    def run(self, storage: DataFlowStorage, input_key: str, output_key: str):
+    def run(self, storage: DataFlowStorage, input_key: str, output_key: str=None):
         self.input_key = input_key
-        self.output_key = output_key
         dataframe = storage.read("dataframe")
         self.logger.info(f"Running {self.filter_name}...")
 
@@ -45,23 +68,27 @@ class QuratingFilter(OperatorABC):
         # Initialize results to all valid (1)
         results = np.ones(len(dataframe), dtype=int)
 
-        # Iterate over each label to apply the filter
+        # Iterate over each label to apply the filter and add a column
         for label in self.min_scores.keys():
             min_score = self.min_scores[label]
             max_score = self.max_scores[label]
             score_key = f"Qurating{''.join([word.capitalize() for word in label.split('_')])}Score"
             metric_scores = np.array(scores[score_key])
-            
+
             # Apply score filter for the current label
             metric_filter = (min_score <= metric_scores) & (metric_scores <= max_score)
             results = results & metric_filter.astype(int)
 
+            # Add a new column with the name '{label}_filter' containing 0 or 1 based on the filter
+            dataframe[f"{label}_label"] = metric_filter.astype(int)
+
         # Filter the dataframe based on the results
         filtered_dataframe = dataframe[results == 1]
-
         # Write the filtered dataframe back to storage
         storage.write(filtered_dataframe)
 
         self.logger.info(f"Filtering completed. Total records passing filter: {len(filtered_dataframe)}.")
 
-        return [self.output_key]
+        result = [f"{label}_label" for label in self.min_scores.keys()]
+        
+        return result

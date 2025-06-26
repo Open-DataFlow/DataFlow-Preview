@@ -67,11 +67,43 @@ class QuratingScorer(OperatorABC):
 
     def eval(self, dataframe, input_key):
         """Evaluate the scores for each row in the dataframe."""
-        scores = []
-        for sample in tqdm(dataframe[input_key], desc="QuratingScorer Evaluating..."):
-            score = self._score_func(sample)
-            scores.append(score)
-        return scores
+
+        batch_dict = {'text': dataframe[input_key]}  # Wrap sample into a list for processing
+        dataset = Dataset.from_dict(batch_dict)
+        # Tokenize and chunk
+        dataset = dataset.map(
+            TokenizeAndChunk(self.model, 'text', self.tokens_field, self.tokens, self.model_cache_dir),
+            batched=True,
+            batch_size=self.map_batch_size,
+            num_proc=self.num_workers,
+            remove_columns=dataset.column_names
+        )
+        
+        # Annotate the model results
+        dataset = dataset.map(
+            ModelAnnotator(self.model, self.labels, self.device_batch_size, self.device, self.model_cache_dir),
+            batched=True,
+            with_indices=True,
+            batch_size=self.map_batch_size,
+            remove_columns=dataset.column_names
+        )
+
+        results_dict = dataset.to_dict()
+
+        result_filtered = {}
+
+        for label in self.labels:
+            average_key = f"{label}_average"
+            
+            # Ensure the average_key exists in the current results_dict entry
+            if average_key in results_dict:
+                # Build a new key based on the label
+                new_key = f"Qurating{''.join([word.capitalize() for word in label.split('_')])}Score"
+                
+                # Assign the corresponding value from the results_dict to the new key in result_filtered
+                result_filtered[new_key] = results_dict[average_key]  # Use the average values
+
+        return result_filtered
 
     def run(self, storage: DataFlowStorage, input_key: str, output_key: str):
         """Read the dataframe, evaluate the scores, and store the results."""
