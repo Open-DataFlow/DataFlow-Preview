@@ -18,9 +18,7 @@
 </div>
 
 ## 1 News
-- [2025-06-15] 🎉 We release the dataflow-agentbot.
-- [2025-06-10] 🎉 We release the documentation of dataflow!
-- [2025-06-01] 🎉 Our new data-centric generation and evaluation system is now open-sourced — stay tuned for future updates!
+🎉 [2025-06-28] We’re excited to announce that DataFlow, our new data-centric generation and evaluation system, is now open-sourced! Stay tuned for future updates.
 
 ## 2 Overview
 

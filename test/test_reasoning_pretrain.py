@@ -5,7 +5,7 @@ from dataflow.llmserving import APILLMServing_request, LocalModelLLMServing
 
 # 这里或许未来可以有个pipeline基类
 class ReasoningPipeline_Pretrain():
-    def __init__(self):
+    def __init__(self, llm_serving=None):
 
         self.storage = FileStorage(
             first_entry_file_name="../dataflow/example/ReasoningPipeline/pipeline_math_short.json",
@@ -13,22 +13,22 @@ class ReasoningPipeline_Pretrain():
             file_name_prefix="dataflow_cache_step",
             cache_type="jsonl",
         )
+        if llm_serving is None:
+            # use API server as LLM serving
+            llm_serving = APILLMServing_request(
+                    api_url="http://123.129.219.111:3000/v1/chat/completions",
+                    model_name="gpt-4o",
+                    max_workers=100
+            )
 
-        # use API server as LLM serving
-        llm_serving = APILLMServing_request(
-                api_url="http://123.129.219.111:3000/v1/chat/completions",
-                model_name="gpt-4o",
-                max_workers=100
-        )
-
-        ## use local model as LLM serving
-        # llm_serving = LocalModelLLMServing(
-        #     # model_name_or_path="/data0/models/Qwen2.5-7B-Instruct", # set to your own model path
-        #     model_name_or_path="/mnt/public/model/huggingface/Qwen2.5-7B-Instruct",
-        #     tensor_parallel_size=4,
-        #     max_tokens=1024,
-        #     model_source="local"
-        # )
+            ## use local model as LLM serving
+            # llm_serving = LocalModelLLMServing(
+            #     # model_name_or_path="/data0/models/Qwen2.5-7B-Instruct", # set to your own model path
+            #     model_name_or_path="/mnt/public/model/huggingface/Qwen2.5-7B-Instruct",
+            #     tensor_parallel_size=4,
+            #     max_tokens=1024,
+            #     model_source="local"
+            # )
         
         self.question_filter_step1 = QuestionFilter(
             system_prompt="You are an expert in evaluating mathematical problems. Follow the user's instructions strictly and output your final judgment in the required JSON format.",
@@ -90,7 +90,9 @@ class ReasoningPipeline_Pretrain():
             read_key_answer="generated_cot",
             output_key="text",
             )
-        
-pipeline = ReasoningPipeline_Pretrain()
-pipeline.forward()
+
+if __name__ == "__main__":
+    # For testing the ReasoningPipeline_Pretrain
+    pipeline = ReasoningPipeline_Pretrain()
+    pipeline.forward()
 

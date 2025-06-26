@@ -1,16 +1,19 @@
+import pytest
 from dataflow.operators.generate.Reasoning import (
     QuestionCategoryClassifier,
     QuestionDifficultyClassifier,
     QuestionGenerator,
     AnswerGenerator,
 )
+
 from dataflow.operators.process.Reasoning import *
 from dataflow.utils.storage import FileStorage
 from dataflow.llmserving import APILLMServing_request, LocalModelLLMServing
+from dataflow.core import LLMServingABC
 
 # 这里或许未来可以有个pipeline基类
 class ReasoningPipeline():
-    def __init__(self):
+    def __init__(self, llm_serving:LLMServingABC=None):
 
         self.storage = FileStorage(
             first_entry_file_name="../dataflow/example/ReasoningPipeline/pipeline_math_short.json",
@@ -25,15 +28,15 @@ class ReasoningPipeline():
         #         model_name="gpt-4o",
         #         max_workers=100
         # )
-
-        # use local model as LLM serving
-        llm_serving = LocalModelLLMServing(
-            # model_name_or_path="/data0/models/Qwen2.5-7B-Instruct", # set to your own model path
-            model_name_or_path="/mnt/public/model/huggingface/Qwen2.5-7B-Instruct",
-            tensor_parallel_size=4,
-            max_tokens=1024,
-            model_source="local"
-        )
+        if llm_serving is None:
+            # use local model as LLM serving
+            llm_serving = LocalModelLLMServing(
+                # model_name_or_path="/data0/models/Qwen2.5-7B-Instruct", # set to your own model path
+                model_name_or_path="/mnt/public/model/huggingface/Qwen2.5-7B-Instruct",
+                tensor_parallel_size=4,
+                max_tokens=8192,
+                model_source="local"
+            )
 
         self.question_filter_step1 = QuestionFilter(
             system_prompt="You are an expert in evaluating mathematical problems. Follow the user's instructions strictly and output your final judgment in the required JSON format.",
@@ -135,6 +138,13 @@ class ReasoningPipeline():
             answer_key = "generated_cot"
         )
         
-model = ReasoningPipeline()
-model.forward()
-
+# @pytest.mark.gpu
+# def test_reasoning_pipeline_runs_without_errors():
+#     try:
+#         pipeline = ReasoningPipeline()
+#         pipeline.forward()
+#     except Exception as e:
+#         pytest.fail(f"ReasoningPipeline execution failed with error: {e}")
+if __name__ == "__main__":
+    model = ReasoningPipeline()
+    model.forward()

@@ -11,7 +11,7 @@ from dataflow.utils.storage import FileStorage
 from dataflow.llmserving import APILLMServing_request
 
 class AgenticRAGPipeline():
-    def __init__(self):
+    def __init__(self, llm_serving=None):
 
         self.storage = FileStorage(
             first_entry_file_name="../dataflow/example/AgenticRAGPipeline/pipeline_small_chunk.json",
@@ -19,12 +19,14 @@ class AgenticRAGPipeline():
             file_name_prefix="dataflow_cache_step",
             cache_type="jsonl",
         )
-
-        api_llm_serving = APILLMServing_request(
-                api_url="http://123.129.219.111:3000/v1/chat/completions",
-                model_name="gpt-4o",
-                max_workers=100
-        )
+        if llm_serving is None:
+            api_llm_serving = APILLMServing_request(
+                    api_url="http://123.129.219.111:3000/v1/chat/completions",
+                    model_name="gpt-4o",
+                    max_workers=100
+            )
+        else:
+            api_llm_serving = llm_serving
 
         self.content_chooser_step1 = ContentChooser(embedding_model_path="/mnt/public/data/lh/models/hub/gte-Qwen2-7B-instruct")
 
@@ -68,6 +70,7 @@ class AgenticRAGPipeline():
             output_answer_verifiability_key="answer_verifiability_grades",
         )
         
-model = AgenticRAGPipeline()
-model.forward()
+if __name__ == "__main__":
+    model = AgenticRAGPipeline()
+    model.forward()
 

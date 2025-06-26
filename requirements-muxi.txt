@@ -4,7 +4,7 @@ scipy
 torch
 tqdm
 transformers
-vllm==0.6.3
+# vllm==0.6.3
 aisuite
 math_verify
 word2number
@@ -16,5 +16,3 @@ datasketch
 modelscope
 addict
 pytest
-rich
-docstring_parser

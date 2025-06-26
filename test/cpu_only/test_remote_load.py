@@ -3,6 +3,7 @@ from dataflow.operators.process.Reasoning import (
 )
 
 from dataflow.utils.storage import FileStorage
+import pytest
 
 class RemoteDataLoader():
     def __init__(self):
@@ -39,9 +40,18 @@ class RemoteDataLoader():
             question_key = "question",
             answer_key = "answer"
         )
-        
-        
-loader = RemoteDataLoader()
-loader.forward()
+@pytest.mark.cpu  
+def test_remote_data_loader():
+    """
+    Test function to run the RemoteDataLoader
+    """
+    import pytest
+    try:
+        loader = RemoteDataLoader()
+        loader.forward()
+    except Exception as e:
+        pytest.fail(f"RemoteDataLoader execution failed with error: {e}")
 
-
+if __name__ == "__main__":
+    loader = RemoteDataLoader()
+    loader.forward()
