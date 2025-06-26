@@ -37,7 +37,8 @@ class QuratingFilter(OperatorABC):
                 'num_workers': 1,
                 'device_batch_size': 16,
                 'device': 'cuda',
-                'labels': ['writing_style', 'required_expertise', 'facts_and_trivia', 'educational_value']
+                'labels': ['writing_style', 'required_expertise', 'facts_and_trivia', 'educational_value'],
+                'model_cache_dir': '../dataflow_cache'
             }
         
         self.scorer = QuratingScorer(**scorer_args)
