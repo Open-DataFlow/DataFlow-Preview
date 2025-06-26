@@ -1,0 +1,87 @@
+from dataflow.core import OperatorABC
+from dataflow.utils.registry import OPERATOR_REGISTRY
+from dataflow.utils.storage import DataFlowStorage
+from datasets import Dataset
+from tqdm import tqdm
+from dataflow import get_logger
+from dataflow.operators.eval.GeneralText.models.Qurating.qurater_annotate import ModelAnnotator
+from dataflow.operators.eval.GeneralText.models.Qurating.qurater_annotate import TokenizeAndChunk
+import torch
+
+@OPERATOR_REGISTRY.register()
+class QuratingScorer(OperatorABC):
+    def __init__(self, model, tokens_field, tokens, map_batch_size, num_workers=1, model_cache_dir=None, labels=None, device_batch_size=None, device=None):
+        self.model = model
+        self.tokens_field = tokens_field
+        self.tokens = tokens
+        self.map_batch_size = map_batch_size
+        self.batch_size = -1 
+        self.num_workers = num_workers
+        self.model_cache_dir = model_cache_dir
+        self.labels = labels or []
+        self.device_batch_size = device_batch_size
+        self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
+        self.score_type = float 
+        self.data_type = 'text'  
+        self.score_name = 'QuratingScore'
+        self.logger = get_logger()
+
+    @staticmethod
+    def get_desc(self, lang):
+        return "使用Qurating评分器评估文本质量" if lang == "zh" else "Evaluate text quality using the Qurating scorer."
+
+    def _score_func(self, sample):
+        """Process a single sample and return the score."""
+        batch_dict = {'text': [sample]}  # Wrap sample into a list for processing
+        dataset = Dataset.from_dict(batch_dict)
+        
+        # Tokenize and chunk
+        dataset = dataset.map(
+            TokenizeAndChunk(self.model, 'text', self.tokens_field, self.tokens, self.model_cache_dir),
+            batched=True,
+            batch_size=self.map_batch_size,
+            num_proc=self.num_workers,
+            remove_columns=dataset.column_names
+        )
+        
+        # Annotate the model results
+        dataset = dataset.map(
+            ModelAnnotator(self.model, self.labels, self.device_batch_size, self.device, self.model_cache_dir),
+            batched=True,
+            with_indices=True,
+            batch_size=self.map_batch_size,
+            remove_columns=dataset.column_names
+        )
+
+        results_dict = dataset.to_dict()
+        result_filtered = {}
+
+        for key in results_dict:
+            for label in self.labels:
+                average_key = f"{label}_average"
+                if average_key in results_dict[key]:
+                    new_key = f"Qurating{''.join([word.capitalize() for word in label.split('_')])}Score"
+                    result_filtered[new_key] = results_dict[key]
+
+        return result_filtered
+
+    def eval(self, dataframe, input_key):
+        """Evaluate the scores for each row in the dataframe."""
+        scores = []
+        for sample in tqdm(dataframe[input_key], desc="QuratingScorer Evaluating..."):
+            score = self._score_func(sample)
+            scores.append(score)
+        return scores
+
+    def run(self, storage: DataFlowStorage, input_key: str, output_key: str):
+        """Read the dataframe, evaluate the scores, and store the results."""
+        dataframe = storage.read("dataframe")
+        scores = self.eval(dataframe, input_key)
+        
+        # Flatten results into the dataframe
+        for score_dict in scores:
+            for key, value in score_dict.items():
+                if key not in dataframe:
+                    dataframe[key] = value
+        
+        storage.write(dataframe)
