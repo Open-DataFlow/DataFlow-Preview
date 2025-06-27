@@ -16,3 +16,5 @@ datasketch
 modelscope
 addict
 pytest
+fasttext==0.9.3
+langkit==0.0.33

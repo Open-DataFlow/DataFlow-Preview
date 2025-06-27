@@ -65,8 +65,8 @@ class TextPipeline():
         self.char_number_filter = CharNumberFilter(threshold=100)
         self.line_start_with_bulletpoint_filter = LineStartWithBulletpointFilter(threshold=0.9)
         self.line_with_javascript_filter = LineWithJavascriptFilter(threshold=3)
-        self.quality_filter = PairQualFilter(min_score=2.5, max_score=10000, scorer_args={"model_cache_dir": self.model_cache_dir, "model_state_dict": "../dataflow_cache/bge-base-en-v1.5/pairwise-loss0.3030-acc0.8650.pt"})
-
+        self.quality_filter = PairQualFilter(min_score=2.5, max_score=10000, lang='en')
+    
     def forward(self):
         # Initial filters
         self.language_filter.run(
@@ -89,7 +89,6 @@ class TextPipeline():
         self.minhash_deduplicator.run(
             storage = self.storage.step(),
             input_key='raw_content',
-            output_key='minhash_deduplicated_label',
         )
         self.blocklist_filter.run(
             storage = self.storage.step(),

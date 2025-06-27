@@ -8,40 +8,18 @@ from dataflow.utils.storage import DataFlowStorage
 @OPERATOR_REGISTRY.register()
 class QuratingFilter(OperatorABC):
 
-    def __init__(self, min_scores: dict = None, max_scores: dict = None, scorer_args: dict = None):
+    def __init__(self, min_scores: dict = {'writing_style': 0,'required_expertise': 0,'facts_and_trivia': 0,'educational_value': 0}, max_scores: dict = {'writing_style': 9,'required_expertise': 9,'facts_and_trivia': 9,'educational_value': 9}, 
+                 map_batch_size: int = 512, num_workers: int = 1, device_batch_size: int = 16, device: str = 'cuda', 
+                 labels: list = ['writing_style', 'required_expertise', 'facts_and_trivia', 'educational_value'], model_cache_dir: str = '../dataflow_cache'):
         self.logger = get_logger()
-
-        # Set default values if arguments are not provided
-        if min_scores is None:
-            min_scores = {
-                'writing_style': 0,
-                'required_expertise': 0,
-                'facts_and_trivia': 0,
-                'educational_value': 0
-            }
         self.min_scores = min_scores
-        if max_scores is None:
-            max_scores = {
-                'writing_style': 9,
-                'required_expertise': 9,
-                'facts_and_trivia': 9,
-                'educational_value': 9
-            }
         self.max_scores = max_scores
-        if scorer_args is None:
-            scorer_args = {
-                'model': 'princeton-nlp/QuRater-1.3B',
-                'tokens_field': 'input_ids',
-                'tokens': 512,
-                'map_batch_size': 512,
-                'num_workers': 1,
-                'device_batch_size': 16,
-                'device': 'cuda',
-                'labels': ['writing_style', 'required_expertise', 'facts_and_trivia', 'educational_value'],
-                'model_cache_dir': '../dataflow_cache'
-            }
+
+        # Initialize the QuratingScorer with the passed parameters
+        self.scorer = QuratingScorer(map_batch_size=map_batch_size, 
+                                     num_workers=num_workers, device_batch_size=device_batch_size, device=device, 
+                                     labels=labels, model_cache_dir=model_cache_dir)
         
-        self.scorer = QuratingScorer(**scorer_args)
         self.filter_name = 'QuratingFilter'
         self.logger.info(f"Initializing {self.filter_name} with min_scores={self.min_scores} and max_scores={self.max_scores}...")
 

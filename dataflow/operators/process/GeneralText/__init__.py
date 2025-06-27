@@ -5,6 +5,8 @@ from .filters.instag_filter import InstagFilter
 from .filters.pair_qual_filter import PairQualFilter
 from .filters.qurating_filter import QuratingFilter
 from .filters.superfiltering_filter import SuperfilteringFilter
+from .filters.fineweb_edu_filter import FineWebEduFilter
+from .filters.text_book_filter import TextbookFilter
 from .filters.heuristics import (
     ColonEndFilter,
     WordNumberFilter,
@@ -40,6 +42,8 @@ __all__ = [
     'QuratingFilter',
     'SuperfilteringFilter',
     'MinHashDeduplicator',
+    'FineWebEduFilter',
+    'TextbookFilter',
     # Heuristic Filters
     'ColonEndFilter',
     'WordNumberFilter',

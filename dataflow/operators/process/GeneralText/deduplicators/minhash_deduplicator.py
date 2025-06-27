@@ -30,7 +30,7 @@ class MinHashDeduplicator(OperatorABC):
                 minhash.update(d.encode('utf8'))
         return minhash
 
-    def run(self, storage: DataFlowStorage, input_keys: list = None, input_key: str = None, output_key: str = None):
+    def run(self, storage: DataFlowStorage, input_keys: list = None, input_key: str = None, output_key: str = 'minhash_deduplicated_label'):
         if input_keys is None and input_key is None:
             self.logger.error(f"Need to specify either input_keys or input_key!")
             raise ValueError(f"Need to specify either input_keys or input_key!")
