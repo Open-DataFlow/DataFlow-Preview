@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 @OPERATOR_REGISTRY.register()
 class DeitaQualityScorer(OperatorABC):
-    def __init__(self, model_name=None, model_cache_dir=None, device=None, max_length=10, use_API=False, api_url=None, api_model_name=None):
+    def __init__(self, device='cuda', model_name='', model_cache_dir='', max_length=512, use_API=False, api_url='', api_model_name=''):
         self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
         self.model_name = model_name
         self.model_cache_dir = model_cache_dir
@@ -20,18 +20,12 @@ class DeitaQualityScorer(OperatorABC):
         self.api_model_name = api_model_name
         self.max_length = max_length
         self.batch_size = 1
-        self.score_type = float
-        self.data_type = 'text'
-        self.score_name = 'DeitaQualityScore'
         self.logger = get_logger()
 
         if self.use_API:
             self.logger.info(f"Using API mode with model: {self.api_model_name}")
         else:
             self.logger.info(f"Using local model: {self.model_name}")
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=self.model_cache_dir)
-            self.model = AutoModelForCausalLM.from_pretrained(self.model_name, cache_dir=self.model_cache_dir).to(self.device)
-
         # Define token strings for quality scoring
         self.token_strs = ["1", "2", "3", "4", "5", "6"]
         self.score_template = np.array([1, 2, 3, 4, 5, 6])
@@ -101,27 +95,29 @@ class DeitaQualityScorer(OperatorABC):
             final_score = np.sum(score_npy, axis=0)
             return final_score
 
-    def eval(self, dataframe, input_key, output_key):
+    def eval(self, dataframe, input_instruction_key: str = 'instruction', input_output_key: str = 'output'):
         # Evaluate the quality score for each row in the dataframe
+        if not self.use_API:
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=self.model_cache_dir)
+            self.model = AutoModelForCausalLM.from_pretrained(self.model_name, cache_dir=self.model_cache_dir).to(self.device)
         scores = []
-        for sample in tqdm(dataframe[input_key], desc="DeitaQualityScorer Evaluating..."):
-            quality_score = self.infer_quality(sample, sample)  # assuming response and instruction are the same for now
+        for sample in tqdm(dataframe[[input_instruction_key, input_output_key]].to_dict(orient='records'), desc="DeitaQualityScorer Evaluating..."):
+            quality_score = self.infer_quality(sample[input_instruction_key], sample[input_output_key])  # assuming response and instruction are the same for now
             scores.append(quality_score)
-        
+        if not self.use_API:
+            del self.tokenizer
+            del self.model
+            import gc;
+            gc.collect()
+            torch.cuda.empty_cache()
         # Return as multiple columns
         return scores
 
-    def run(self, storage: DataFlowStorage, input_key: str, output_key: str):
+    def run(self, storage: DataFlowStorage, input_instruction_key: str = 'instruction', input_output_key: str = 'output', output_key: str = 'deita_quality_score'):
         # Read the dataframe, evaluate scores, and store results
         dataframe = storage.read("dataframe")
-        scores = self.eval(dataframe, input_key, output_key)
+        scores = self.eval(dataframe, input_instruction_key, input_output_key)
         
         # Flatten results and write them to output_key in the dataframe
-        for score_dict in scores:
-            for i, value in enumerate(score_dict):
-                column_name = f"{output_key}_{i+1}"  # Store each score in a separate column
-                if column_name not in dataframe:
-                    dataframe[column_name] = []
-                dataframe[column_name].append(value)
-        
+        dataframe[output_key] = scores        
         storage.write(dataframe)

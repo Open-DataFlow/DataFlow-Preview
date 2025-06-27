@@ -3,6 +3,8 @@ from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow.utils.storage import DataFlowStorage
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import numpy as np
+import pandas as pd
+from tqdm import tqdm
 from scipy.special import softmax
 import requests
 import torch
@@ -11,10 +13,10 @@ import json
 
 @OPERATOR_REGISTRY.register()
 class InstagScorer(OperatorABC):
-    def __init__(self, model_path=None, model_cache_dir=None, device=None, max_new_tokens=1024, use_API=False, api_url='http://0.0.0.0:8003', api_model_name=None, temperature=1.0, do_sample=False, num_return_sequences=1, return_dict_in_generate=True):
+    def __init__(self, model_name='', model_cache_dir='', device='cuda', max_new_tokens=1024, use_API=False, api_url='http://0.0.0.0:8003', api_model_name='', temperature=0, do_sample=False, num_return_sequences=1, return_dict_in_generate=True):
         # Initialize parameters and model
         self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model_path = model_path
+        self.model_name = model_name
         self.model_cache_dir = model_cache_dir
         self.use_API = use_API
         self.api_url = api_url
@@ -26,19 +28,12 @@ class InstagScorer(OperatorABC):
         self.return_dict_in_generate = return_dict_in_generate
         self.batch_size = 1
         self.score_type = float
-        self.data_type = 'text'
-        self.score_name = 'InstagScore'
         self.logger = get_logger()
 
         if self.use_API:
             self.logger.info(f"Using API mode with URL: {self.api_url}, model: {self.api_model_name}")
         else:
-            self.logger.info(f"Using local model: {self.model_path}")
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_path, cache_dir=self.model_cache_dir)
-            self.model = AutoModelForCausalLM.from_pretrained(self.model_path, cache_dir=self.model_cache_dir).to(self.device)
-            self.model.requires_grad_(False)
-            self.model.eval()
-
+            self.logger.info(f"Using local model: {self.model_name}")
         # Token strings and score template
         self.token_strs = ["1", "2", "3", "4", "5", "6"]
         self.score_template = np.array([1, 2, 3, 4, 5, 6])
@@ -150,27 +145,48 @@ class InstagScorer(OperatorABC):
             
             return json_outputs
 
-    def evaluate_batch(self, batch):
+    def _score_func(self, sample, input_instruction_key):
         """Evaluate a batch of queries and return corresponding scores."""
-        queries = batch.get('instruction', [''])
-        json_outputs = self.inference_batch(queries)
-        
+        # query = sample.get(input_instruction_key, '')
+        json_output = self.inference_batch([sample])[0]
+        complexity_score = None
+        if isinstance(json_output, list):
+            complexity_score = len(json_output)
+            self.logger.info(f"列表类型JSON,标签数量: {complexity_score}")
+        elif isinstance(json_output, dict) and "tag" in json_output:  # 单个标签返回为字典
+            complexity_score = 1
+            self.logger.info(f"字典类型JSON,包含tag字段,评分为1")
+        elif isinstance(json_output, dict) and len(json_output) > 0:  # 其他字典类型,有内容
+            complexity_score = 1
+            self.logger.info(f"其他字典类型JSON,评分为1: {json_output}")
+        else:
+            complexity_score = 0
+            self.logger.warning(f"未识别的JSON类型或空数据,评分为0: {json_output}") 
+        return complexity_score
+
+    def eval(self, dataframe: pd.DataFrame, input_instruction_key: str):
+        if not self.use_API:
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=self.model_cache_dir)
+            self.model = AutoModelForCausalLM.from_pretrained(self.model_name, cache_dir=self.model_cache_dir).to(self.device)
+            self.model.requires_grad_(False)
+            self.model.eval()
         scores = []
-        for json_output in json_outputs:
-            if isinstance(json_output, dict) and "tag" in json_output:
-                scores.append(1)  # If JSON contains 'tag' field, assign score 1
-            else:
-                scores.append(0)  # Otherwise, score 0
-            
+        for sample in tqdm(dataframe[input_instruction_key], desc="InstagScorer Evaluating..."):
+            scores.append(self._score_func(sample, input_instruction_key))
+        if not self.use_API:
+            del self.tokenizer
+            del self.model
+            import gc;
+            gc.collect()
+            torch.cuda.empty_cache()
         return scores
 
-    def run(self, storage: DataFlowStorage, input_key: str, output_key: str):
+    def run(self, storage: DataFlowStorage, input_instruction_key: str = 'instruction', output_key: str = 'instag_score'):
         """Process the batch and store results under the specified output_key."""
         dataframe = storage.read("dataframe")
-        scores = self.eval(dataframe, input_key)
+        scores = self.eval(dataframe, input_instruction_key)
         
         # Store the results in the output_key (create multiple columns if needed)
-        for i, score in enumerate(scores):
-            dataframe[f"{output_key}_{i+1}"] = score
+        dataframe[output_key] = scores
         
         storage.write(dataframe)

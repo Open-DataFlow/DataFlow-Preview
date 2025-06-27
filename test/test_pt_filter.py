@@ -31,7 +31,7 @@ from dataflow.operators.refine.GeneralText import (
 
 from dataflow.utils.storage import FileStorage
 
-class TextPipeline():
+class PTTextPipeline():
     def __init__(self):
         self.storage = FileStorage(
             first_entry_file_name="./dataflow/example/GeneralTextPipeline/pt_input.jsonl",
@@ -176,5 +176,5 @@ class TextPipeline():
             input_key='raw_content',
         )
 
-model = TextPipeline()
+model = PTTextPipeline()
 model.forward()

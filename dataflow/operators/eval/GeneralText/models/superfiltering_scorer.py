@@ -9,38 +9,28 @@ import requests
 import json
 from math import exp
 from dataflow.utils.utils import get_logger
+import pandas as pd
 
 # Superfiltering instruction quality (ifd) evaluation
 # cited from: Superfiltering: Weak-to-Strong Data Filtering for Fast Instruction-Tuning
 @OPERATOR_REGISTRY.register()
 class SuperfilteringScorer(OperatorABC):
-    def __init__(self, args_dict):
-        super().__init__(args_dict)
-        self.device = args_dict.get('device', 'cuda' if torch.cuda.is_available() else 'cpu')
-        self.model_name = args_dict.get('model_name')
-        self.model_cache_dir = args_dict.get('model_cache_dir')
-        self.use_API = args_dict.get('use_API', False)  # 默认使用本地
-        self.api_url = args_dict.get('API_url', 'http://localhost:8000')
-        self.api_model_name = args_dict.get('API_model_name')  # 使用vLLM时需要指定
-        self.prompt = args_dict.get('prompt', 'none')
-        self.max_length = args_dict.get('max_length', 512) 
-        self.batch_size = 1
-        self.score_type = float 
-        self.data_type = 'text' 
-        self.score_name = 'SuperfilteringScore' 
+    def __init__(self, device='cuda', model_name='', model_cache_dir='', use_API=False, API_url="http://localhost:8000", API_model_name="", prompt=None, max_length=512, batch_size=1):
+        self.device = device
+        self.model_name = model_name
+        self.model_cache_dir = model_cache_dir
+        self.use_API = use_API
+        self.api_url = API_url
+        self.api_model_name = API_model_name
+        self.prompt = prompt
+        self.max_length = max_length
+        self.batch_size = batch_size
         self.logger = get_logger()
         
         if self.use_API:
             self.logger.info(f"Using API mode with model: {self.api_model_name}")
         else:
             self.logger.info(f"Using local model: {self.model_name}")
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=self.model_cache_dir)
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_name, 
-                device_map=self.device, 
-                cache_dir=self.model_cache_dir, 
-                output_hidden_states=True
-            ).to(self.device)
     
     @staticmethod
     def get_desc(self, lang):
@@ -157,7 +147,7 @@ class SuperfilteringScorer(OperatorABC):
             ),
         }
 
-        if self.prompt == 'none':
+        if self.prompt is None:
             prompt_no_input = PROMPT_DICT_NONE["prompt_no_input"]
             prompt_input = PROMPT_DICT_NONE["prompt_input"]
 
@@ -202,29 +192,45 @@ class SuperfilteringScorer(OperatorABC):
             
         return score
 
-    def evaluate_batch(self, batch):
-        instruction = batch.get('instruction', [''])[0]
-        output = batch.get('output', [''])[0]
-        input_text = batch.get('input', [''])[0] if 'input' in batch else ''
+    def _score_func(self, sample, input_instruction_key: str = 'instruction', input_input_key: str = 'input', input_output_key: str = 'output'):
+        instruction = sample.get(input_instruction_key, [''])
+        output = sample.get(input_output_key, [''])
+        input_text = sample.get(input_input_key, ['']) if input_input_key is not None and input_input_key in sample else ''
         
         if not output:
             score = None
         else:
             score = self.inference(instruction, input_text, output)
             
-        return [score]
+        return score
     
-    def run(self, storage: DataFlowStorage, input_key: str, output_key: str):
+    def eval(self, dataframe: pd.DataFrame, input_instruction_key: str = 'instruction', input_input_key: str = 'input', input_output_key: str = 'output'):
+        if not self.use_API:
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=self.model_cache_dir)
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_name, 
+                device_map=self.device, 
+                cache_dir=self.model_cache_dir, 
+                output_hidden_states=True
+            ).to(self.device)
+       
+        key_list = [input_instruction_key, input_output_key]
+        if input_input_key is not None:
+            key_list.append(input_input_key)
+        scores = [self._score_func(sample, input_instruction_key, input_input_key, input_output_key) for sample in tqdm(dataframe[key_list].to_dict(orient='records'), desc="SuperfilteringScorer evaluating...")]
+        if not self.use_API:
+            del self.tokenizer
+            del self.model
+            import gc;
+            gc.collect()
+            torch.cuda.empty_cache()
+        return scores
+    
+    def run(self, storage: DataFlowStorage, input_instruction_key: str = 'instruction', input_input_key: str = 'input', input_output_key: str = 'output', output_key: str = 'superfiltering_score'):
         """Read the dataframe, evaluate scores, and store the results."""
         dataframe = storage.read("dataframe")  # Read the dataframe from storage
-        scores = self.eval(dataframe, input_key, output_key)  # Evaluate the scores
-
-        # Store the results in the dataframe under the output_key
-        for i, score_list in enumerate(scores):
-            for j, score in enumerate(score_list):
-                column_name = f"{output_key}_{j+1}"  # If multiple scores, store each in a separate column
-                if column_name not in dataframe:
-                    dataframe[column_name] = []
-                dataframe[column_name].append(score)
+        scores = self.eval(dataframe, input_instruction_key, input_input_key, input_output_key)  # Evaluate the scores
+                
+        dataframe[output_key] = scores
 
         storage.write(dataframe)  # Write the updated dataframe back to storage
