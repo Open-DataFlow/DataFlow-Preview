@@ -4,14 +4,15 @@ from dataflow.core import OperatorABC
 from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow.utils.storage import DataFlowStorage
 from tqdm import tqdm
+import numpy as np
 
 @OPERATOR_REGISTRY.register()
 class FineWebEduScorer(OperatorABC):
-    def __init__(self, model_name, model_cache_dir=None, device=None, batch_size=1):
+    def __init__(self, model_name: str = 'HuggingFaceTB/fineweb-edu-classifier', model_cache_dir: str = '../dataflow_cache', device: str = 'cuda'):
         self.model_name = model_name
         self.model_cache_dir = model_cache_dir
         self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
-        self.batch_size = batch_size
+        self.batch_size = 1
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=self.model_cache_dir)
         self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name, cache_dir=self.model_cache_dir).to(self.device)
         self.model.eval()
@@ -36,7 +37,7 @@ class FineWebEduScorer(OperatorABC):
         for sample in tqdm(dataframe[input_key], desc="FineWebEduScorer Evaluating..."):
             score = self._score_func(sample)
             scores.append(score)
-        return scores
+        return np.array(scores)
 
     def run(self, storage: DataFlowStorage, input_key: str, output_key: str):
         self.input_key = input_key
