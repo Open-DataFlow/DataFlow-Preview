@@ -1,5 +1,5 @@
  
-from dataflow.operators.process.GeneralText.filters.fineweb_edu_filter import FineWebEduFilter
+from dataflow.operators.process.GeneralText import FineWebEduFilter, PairQualFilter, QuratingFilter
 
 from dataflow.utils.storage import FileStorage
 
@@ -12,10 +12,19 @@ class TextPipeline():
             cache_type="jsonl",
         )
         self.model_cache_dir = '../dataflow_cache'
-        self.filter = FineWebEduFilter()
-
+        self.quality_filter1 = PairQualFilter(min_score=2.5, max_score=10000, lang='en', model_cache_dir=self.model_cache_dir)
+        self.quality_filter2 = FineWebEduFilter(min_score=2.5, max_score=10000, model_cache_dir=self.model_cache_dir, device='cuda')
+        self.quality_filter3 = QuratingFilter()
     def forward(self):
-        self.filter.run(
+        self.quality_filter1.run(
+            storage = self.storage.step(),
+            input_key = "raw_content"
+        )
+        self.quality_filter2.run(
+            storage = self.storage.step(),
+            input_key = "raw_content"
+        )
+        self.quality_filter3.run(
             storage = self.storage.step(),
             input_key = "raw_content"
         )

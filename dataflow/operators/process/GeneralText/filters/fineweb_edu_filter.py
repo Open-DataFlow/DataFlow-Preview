@@ -6,16 +6,14 @@ from dataflow.utils.utils import get_logger
 
 @OPERATOR_REGISTRY.register()
 class FineWebEduFilter(OperatorABC):
-
-    def __init__(self, min_score: float = 0.4, max_score: float = 0.9, model_name: str = 'HuggingFaceTB/fineweb-edu-classifier', 
-                 device: str = 'cuda', model_cache_dir: str = '../dataflow_cache'):
+    def __init__(self, min_score: float = 2.5, max_score: float = 10000, model_cache_dir: str = '../dataflow_cache', device: str = 'cuda'):
         self.min_score = min_score
         self.max_score = max_score
         self.logger = get_logger()
-        self.scorer = FineWebEduScorer(model_name=model_name, model_cache_dir=model_cache_dir, device=device)
+        self.scorer = FineWebEduScorer(model_cache_dir=model_cache_dir, device=device)
         self.filter_name = 'FineWebEduFilter'
         self.logger.info(f"Initializing {self.filter_name} with min_score={self.min_score}, max_score={self.max_score}, "
-                         f"model_name={model_name}, device={device}, model_cache_dir={model_cache_dir}")
+                         f"device={device}, model_cache_dir={model_cache_dir}")
 
     @staticmethod
     def get_desc(self, lang):

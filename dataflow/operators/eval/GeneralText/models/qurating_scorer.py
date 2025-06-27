@@ -10,12 +10,11 @@ import torch
 
 @OPERATOR_REGISTRY.register()
 class QuratingScorer(OperatorABC):
-    def __init__(self, model: str = 'princeton-nlp/QuRater-1.3B', tokens_field: str = 'input_ids', tokens: int = 512, 
-                 map_batch_size: int = 512, num_workers: int = 1, device_batch_size: int = 16, device: str = 'cuda', 
+    def __init__(self, map_batch_size: int = 512, num_workers: int = 1, device_batch_size: int = 16, device: str = 'cuda', 
                  labels: list = ['writing_style', 'required_expertise', 'facts_and_trivia', 'educational_value'], model_cache_dir: str = '../dataflow_cache'):
-        self.model = model
-        self.tokens_field = tokens_field
-        self.tokens = tokens
+        self.model = 'princeton-nlp/QuRater-1.3B'
+        self.tokens_field = 'input_ids'
+        self.tokens = 512
         self.map_batch_size = map_batch_size
         self.batch_size = -1 
         self.num_workers = num_workers

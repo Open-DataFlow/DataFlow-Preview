@@ -7,18 +7,14 @@ from dataflow.utils.storage import DataFlowStorage
 
 @OPERATOR_REGISTRY.register()
 class PairQualFilter(OperatorABC):
-    def __init__(self, min_score=2.5, max_score=10000, scorer_args: dict = None):
+    def __init__(self, min_score=2.5, max_score=10000, model_cache_dir='../dataflow_cache', lang='en'):
         self.logger = get_logger()
         self.min_score = min_score
         self.max_score = max_score
         
-        # Initialize the scorer with provided arguments
-        if scorer_args is None:
-            scorer_args = {}
-        self.scorer = PairQualScorer(**scorer_args)
+        self.scorer = PairQualScorer(model_cache_dir=model_cache_dir, lang=lang)
         self.filter_name = 'PairQualFilter'
-        
-        # Log the initialization
+
         self.logger.info(f"Initializing {self.filter_name} with min_score={self.min_score}, max_score={self.max_score}...")
 
     @staticmethod

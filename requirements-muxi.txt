@@ -16,3 +16,4 @@ datasketch
 modelscope
 addict
 pytest
+fasttext==0.9.3
