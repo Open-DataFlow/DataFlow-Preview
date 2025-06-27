@@ -1,0 +1,53 @@
+from dataflow.operators.eval.GeneralText import InstagScorer
+from dataflow.core import OperatorABC
+import numpy as np
+from dataflow.utils.registry import OPERATOR_REGISTRY
+from dataflow.utils.utils import get_logger
+from dataflow.utils.storage import DataFlowStorage
+
+@OPERATOR_REGISTRY.register()
+class InstagFilter(OperatorABC):
+
+    def __init__(self, min_score=0.0, max_score=1.0, model_name='', model_cache_dir='', device='cuda', max_new_tokens=1024, use_API=False, api_url='http://0.0.0.0:8003', api_model_name='', temperature=0, do_sample=False, num_return_sequences=1, return_dict_in_generate=True):
+        self.logger = get_logger()
+        self.min_score = min_score
+        self.max_score = max_score
+        
+        # Initialize the scorer
+        self.scorer = InstagScorer(
+            model_name=model_name,
+            model_cache_dir=model_cache_dir,
+            use_API=use_API,
+            api_url=api_url,
+            api_model_name=api_model_name,
+            max_new_tokens=max_new_tokens,
+            temperature=temperature,
+            do_sample=do_sample,
+            num_return_sequences=num_return_sequences,
+            return_dict_in_generate=return_dict_in_generate,
+        )
+        self.logger.info(f"Initializing {self.__class__.__name__} with min_score={self.min_score} and max_score={self.max_score}...")
+
+    @staticmethod
+    def get_desc(self, lang):
+        return "使用Instag评分器过滤掉低标签数量数据" if lang == "zh" else "Filter out data with low tag counts using the Instag scorer."
+
+    def run(self, storage: DataFlowStorage, input_instruction_key: str = 'instruction', output_key: str = 'instag_filter_label'):
+        self.input_instruction_key = input_instruction_key
+        self.output_key = output_key
+        dataframe = storage.read("dataframe")
+        self.logger.info(f"Running {self.__class__.__name__}...")
+
+        # Get the metric scores
+        scores = self.scorer.eval(dataframe, self.input_instruction_key)
+
+        dataframe[self.output_key] = scores
+        # Filter records based on the score range
+        filtered_dataframe = dataframe[(dataframe[self.output_key] >= self.min_score) & (dataframe[self.output_key] <= self.max_score)]
+
+        # Write the filtered dataframe back to storage
+        storage.write(filtered_dataframe)
+
+        self.logger.info(f"Filtering completed. Total records passing filter: {len(filtered_dataframe)}.")
+
+        return [self.output_key]

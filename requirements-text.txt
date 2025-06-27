@@ -10,7 +10,7 @@ langkit==0.0.33
 loguru==0.7.2
 matplotlib==3.9.2
 multiprocess==0.70.16
-openai==1.44.1
+openai=
 prettytable==3.11.0
 pyspark==3.5.2
 sentencepiece==0.2.0

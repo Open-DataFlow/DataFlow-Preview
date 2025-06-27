@@ -1,4 +1,5 @@
-import logging
+import torch
+from dataflow import get_logger
 from vllm import LLM,SamplingParams
 from huggingface_hub import snapshot_download
 from dataflow.core import LLMServingABC
@@ -35,7 +36,8 @@ class LocalModelLLMServing(LLMServingABC):
                 )
             except:
                 self.real_model_path = model_name_or_path
-        logging.info(f"Model will be loaded from {self.real_model_path}")
+        self.logger = get_logger()
+        self.logger.info(f"Model will be loaded from {self.real_model_path}")
         self.sampling_params = SamplingParams(
             temperature=temperature,
             top_p=top_p,
@@ -78,4 +80,54 @@ class LocalModelLLMServing(LLMServingABC):
         full_prompts = [system_prompt + '\n' + question for question in user_inputs]
         responses = self.llm.generate(full_prompts, self.sampling_params)
         return [output.outputs[0].text for output in responses]
+    
+    def load(self,
+            tensor_parallel_size: int = 1,
+            model_name_or_path: str = None,
+            cache_dir: str = None,
+            temperature: float = 0.7,
+            top_p: float = 0.9,
+            max_tokens: int = 1024,
+            top_k: int = 40,
+            repetition_penalty: float = 1.0,
+            seed: int = 42,
+            download_dir: str = "./ckpt/models/",
+            max_model_len: int = 4096,
+            model_source: str= "remote",
+            ):
+        if model_name_or_path is None:
+            raise ValueError("model_name_or_path is required")
+        if(model_source=="local"):
+            self.real_model_path = model_name_or_path
+        elif(model_source=="remote"):  
+            try:
+                self.real_model_path = snapshot_download(
+                    repo_id=model_name_or_path,
+                    cache_dir=cache_dir,
+                    local_dir=f"{download_dir}{model_name_or_path}",
+                )
+            except:
+                self.real_model_path = model_name_or_path
+        self.logger.info(f"Model will be loaded from {self.real_model_path}")
+        self.sampling_params = SamplingParams(
+            temperature=temperature,
+            top_p=top_p,
+            max_tokens=max_tokens,
+            top_k=top_k,
+            repetition_penalty=repetition_penalty,
+            seed=seed
+            # hat_template_kwargs={"enable_thinking": False},
+        )
+        self.llm = LLM(
+            model=self.real_model_path,
+            tensor_parallel_size=tensor_parallel_size,
+            max_model_len=max_model_len,
+        )
+
+    
+    def cleanup(self):
+        del self.llm
+        import gc;
+        gc.collect()
+        torch.cuda.empty_cache()
     

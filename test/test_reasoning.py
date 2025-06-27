@@ -13,7 +13,7 @@ from dataflow.core import LLMServingABC
 
 # 这里或许未来可以有个pipeline基类
 class ReasoningPipeline():
-    def __init__(self, llm_serving:LLMServingABC=None):
+    def __init__(self, llm_serving: LLMServingABC = None):
 
         self.storage = FileStorage(
             first_entry_file_name="../dataflow/example/ReasoningPipeline/pipeline_math_short.json",
