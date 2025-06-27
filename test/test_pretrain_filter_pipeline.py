@@ -89,7 +89,6 @@ class TextPipeline():
         self.minhash_deduplicator.run(
             storage = self.storage.step(),
             input_key='raw_content',
-            output_key='minhash_deduplicated_label',
         )
         self.blocklist_filter.run(
             storage = self.storage.step(),

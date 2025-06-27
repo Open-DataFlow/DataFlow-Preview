@@ -6,19 +6,21 @@ from dataflow.core import OperatorABC
 from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow.utils.storage import DataFlowStorage
 from tqdm import tqdm
+import numpy as np
 
 @OPERATOR_REGISTRY.register()
 class TextbookScorer(OperatorABC):
-    def __init__(self, model_repo, model_file, model_cache_dir=None, batch_size=1, low_score=1.0, mid_score=3.0, high_score=5.0):
+    def __init__(self, model_cache_dir=None):
         # Initialize model, tokenizer, and parameters
         model_path = hf_hub_download(
-            repo_id=model_repo,
-            filename=model_file,
+            repo_id='kenhktsui/llm-data-textbook-quality-fasttext-classifer-v2',
+            filename='model.bin',
             cache_dir=model_cache_dir
         )
-
+        low_score=1.0
+        mid_score=3.0
+        high_score=5.0
         self.model = fasttext.load_model(model_path)
-        self.batch_size = batch_size
         self.score_type = float
         self.data_type = 'text'
         self.score_name = 'TextbookScore'
@@ -52,7 +54,7 @@ class TextbookScorer(OperatorABC):
         
         return score_list
 
-    def eval(self, dataframe, input_key, output_key):
+    def eval(self, dataframe, input_key):
         """Evaluate the scores for each row in the dataframe."""
         scores = []
         text_list = dataframe[input_key]
@@ -61,7 +63,7 @@ class TextbookScorer(OperatorABC):
             score = self._score_func([sample])
             scores.append(score)
         
-        return scores
+        return np.array(scores)
 
     def run(self, storage: DataFlowStorage, input_key: str, output_key: str):
         """Read the dataframe, evaluate scores, and store results under the output_key."""
