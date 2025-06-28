@@ -7,7 +7,7 @@ from dataflow.utils.storage import DataFlowStorage
 
 @OPERATOR_REGISTRY.register()
 class PairQualFilter(OperatorABC):
-    def __init__(self, min_score=2.5, max_score=10000, model_cache_dir='../dataflow_cache', lang='en'):
+    def __init__(self, min_score=0, max_score=10000, model_cache_dir='../dataflow_cache', lang='en'):
         self.logger = get_logger()
         self.min_score = min_score
         self.max_score = max_score

@@ -54,7 +54,7 @@ class PTTextPipeline():
         self.mean_word_length_filter = MeanWordLengthFilter(min_length=3, max_length=10)
         self.symbol_word_ratio_filter = SymbolWordRatioFilter(threshold=0.4)
         self.html_entity_filter = HtmlEntityFilter()
-        self.id_card_filter = IDCardFilter()
+        self.id_card_filter = IDCardFilter(threshold=3)
         self.no_punc_filter = NoPuncFilter(threshold=112)
         self.special_character_filter = SpecialCharacterFilter()
         self.watermark_filter = WatermarkFilter(watermarks=['Copyright', 'Watermark', 'Confidential'])
@@ -65,7 +65,7 @@ class PTTextPipeline():
         self.char_number_filter = CharNumberFilter(threshold=100)
         self.line_start_with_bulletpoint_filter = LineStartWithBulletpointFilter(threshold=0.9)
         self.line_with_javascript_filter = LineWithJavascriptFilter(threshold=3)
-        self.quality_filter = PairQualFilter(min_score=2.5, max_score=10000, lang='en')
+        self.quality_filter = PairQualFilter(min_score=0, max_score=10000, lang='en')
     
     def forward(self):
         # Initial filters

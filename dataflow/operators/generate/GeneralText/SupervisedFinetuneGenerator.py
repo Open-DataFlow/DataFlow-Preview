@@ -22,7 +22,8 @@ def extract_json_object(model_output):
             continue
     return None
 
-@OPERATOR_REGISTRY.register()
+from transformers import AutoTokenizer  # 引入 tokenizer 库
+
 class SupervisedFinetuneGenerator(OperatorABC):
     '''
     Answer Generator is a class that generates answers for given questions.
@@ -31,6 +32,9 @@ class SupervisedFinetuneGenerator(OperatorABC):
         self.logger = get_logger()
         self.prompts = SupervisedFinetuneGeneratorPrompt()    
         self.llm_serving = llm_serving
+        
+        self.tokenizer = llm_serving.tokenizer
+        self.max_tokens = 4096  
     
     @staticmethod
     def get_desc(self, lang):
@@ -51,7 +55,11 @@ class SupervisedFinetuneGenerator(OperatorABC):
         for index, row in dataframe.iterrows():
             raw_content = row.get(self.input_key, '')
             if raw_content:
-                llm_input = self.prompts.sft_generate_prompt(raw_content)
+                # 对 raw_content 进行 tokenization
+                tokens = self.tokenizer.encode(raw_content, truncation=True, max_length=self.max_tokens)
+                truncated_content = self.tokenizer.decode(tokens, skip_special_tokens=True)
+                # 使用截断后的内容生成 prompt
+                llm_input = self.prompts.sft_generate_prompt(content=truncated_content)
                 llm_inputs.append(llm_input)
         
         # Generate the text using the model

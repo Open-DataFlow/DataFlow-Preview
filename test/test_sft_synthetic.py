@@ -43,9 +43,9 @@ class SFTTextSynPipeline():
             file_name_prefix="dataflow_cache",
             cache_type="jsonl",
         )
-        self.model_cache_dir = '/mnt/public/code/zzy/dataflow_cache'
+        self.model_cache_dir = '../dataflow_cache'
         self.llm_serving = LocalModelLLMServing(
-            model_name_or_path="/mnt/public_2/code/zzy/dataflow_cache/Qwen/Qwen2.5-7B-Instruct",
+            model_name_or_path='../dataflow_cache/Qwen/Qwen2.5-7B-Instruct',
             tensor_parallel_size=1,
             max_tokens=8192,
             model_source="local"
@@ -64,7 +64,7 @@ class SFTTextSynPipeline():
         self.mean_word_length_filter = MeanWordLengthFilter(min_length=3, max_length=10)
         self.symbol_word_ratio_filter = SymbolWordRatioFilter(threshold=0.4)
         self.html_entity_filter = HtmlEntityFilter()
-        self.id_card_filter = IDCardFilter()
+        self.id_card_filter = IDCardFilter(threshold=3)
         self.no_punc_filter = NoPuncFilter(threshold=112)
         self.special_character_filter = SpecialCharacterFilter()
         self.watermark_filter = WatermarkFilter(watermarks=['Copyright', 'Watermark', 'Confidential'])
@@ -75,41 +75,25 @@ class SFTTextSynPipeline():
         self.char_number_filter = CharNumberFilter(threshold=100)
         self.line_start_with_bulletpoint_filter = LineStartWithBulletpointFilter(threshold=0.9)
         self.line_with_javascript_filter = LineWithJavascriptFilter(threshold=3)
-        self.quality_filter = PairQualFilter(min_score=2.5, max_score=10000, lang='en')
+        self.quality_filter = PairQualFilter(min_score=-2, max_score=10000, lang='en')
         self.sft_generator = SupervisedFinetuneGenerator(
             llm_serving=self.llm_serving
         )
         self.word_number_filter_syn = WordNumberFilter(
             min_words=20,
-            max_words=1000
+            max_words=5000
         )
         self.super_filtering_filter = SuperfilteringFilter(
             min_score=0.5,
-            max_score=10000.0,
-            use_API=False,
-            model_name="/mnt/public_2/code/zzy/dataflow_cache/models--gpt2/snapshots/607a30d783dfa663caf39e06633721c8d4cfcd7e",
-            max_length=512,
+            max_score=10000,
+            model_cache_dir=self.model_cache_dir
         )
         self.deita_quality_filter = DeitaQualityFilter(
             min_score=2.5,
             max_score=10000,
-            use_API=False,
-            model_name="/mnt/public_2/code/zzy/dataflow_cache/models--hkust-nlp--deita-quality-scorer/snapshots/f30fe3e0cff454fd1f02953fd2b8bc3d1e67697d",
             max_length=512,
+            model_cache_dir=self.model_cache_dir
         )
-        
-        self.instag_filter = InstagFilter(
-            min_score=2,
-            max_score=10000,
-            use_API=False,
-            model_name="/mnt/public_2/code/zzy/dataflow_cache/models--OFA-Sys--InsTagger/snapshots/261bb8900245774471bc04421ddd47930a0bd28a",
-            max_new_tokens=1024,
-            do_sample=False,
-            num_return_sequences=1,
-            return_dict_in_generate=True,
-            temperature=0
-        )
-        self.model_cache_dir = '/mnt/public/code/zzy/dataflow_cache'
 
     def forward(self):
         # Initial filters
@@ -239,10 +223,6 @@ class SFTTextSynPipeline():
             storage=self.storage.step(),
             input_instruction_key='instruction',
             input_output_key='output'
-        )
-        self.instag_filter.run(
-            storage=self.storage.step(),
-            input_instruction_key='instruction'
         )
 
 model = SFTTextSynPipeline()

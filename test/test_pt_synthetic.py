@@ -42,13 +42,14 @@ class PTTextSynPipeline():
             cache_type="jsonl",
         )
         
+        
+        self.model_cache_dir = '../dataflow_cache'
         self.llm_serving = LocalModelLLMServing(
-            model_name_or_path="/mnt/public_2/code/zzy/dataflow_cache/Qwen/Qwen2.5-7B-Instruct",
+            model_name_or_path='../dataflow_cache/Qwen/Qwen2.5-7B-Instruct',
             tensor_parallel_size=1,
             max_tokens=8192,
             model_source="local"
         )
-        self.model_cache_dir = '/mnt/public/code/zzy/dataflow_cache'
         self.language_filter = LanguageFilter(allowed_languages = '__label__eng_Latn', model_cache_dir = self.model_cache_dir)        
         self.remove_extra_spaces_refiner = RemoveExtraSpacesRefiner()
         self.remove_emoji_refiner = RemoveEmojiRefiner()
@@ -63,7 +64,7 @@ class PTTextSynPipeline():
         self.mean_word_length_filter = MeanWordLengthFilter(min_length=3, max_length=10)
         self.symbol_word_ratio_filter = SymbolWordRatioFilter(threshold=0.4)
         self.html_entity_filter = HtmlEntityFilter()
-        self.id_card_filter = IDCardFilter()
+        self.id_card_filter = IDCardFilter(threshold=3)
         self.no_punc_filter = NoPuncFilter(threshold=112)
         self.special_character_filter = SpecialCharacterFilter()
         self.watermark_filter = WatermarkFilter(watermarks=['Copyright', 'Watermark', 'Confidential'])
@@ -74,12 +75,11 @@ class PTTextSynPipeline():
         self.char_number_filter = CharNumberFilter(threshold=100)
         self.line_start_with_bulletpoint_filter = LineStartWithBulletpointFilter(threshold=0.9)
         self.line_with_javascript_filter = LineWithJavascriptFilter(threshold=3)
-        self.quality_filter = PairQualFilter(min_score=2.5, max_score=10000, lang='en')
+        self.quality_filter = PairQualFilter(min_score=-2, max_score=10000, lang='en')
         self.pt_generator = PretrainGenerator(
             llm_serving=self.llm_serving
         )
-        self.qurating_filter = QuratingFilter()
-        self.model_cache_dir = '/mnt/public/code/zzy/dataflow_cache'
+        self.qurating_filter = QuratingFilter(min_scores = {'writing_style': 0,'required_expertise': 0,'facts_and_trivia': 0,'educational_value': 0}, max_scores = {'writing_style': 9,'required_expertise': 9,'facts_and_trivia': 9,'educational_value': 9})
 
     def forward(self):
         # Initial filters
@@ -194,6 +194,10 @@ class PTTextSynPipeline():
             storage=self.storage.step(),
             input_key='raw_content',
             output_key='generated_content'
+        )
+        self.qurating_filter.run(
+            storage=self.storage.step(),
+            input_key='generated_content'
         )
 
 model = PTTextSynPipeline()

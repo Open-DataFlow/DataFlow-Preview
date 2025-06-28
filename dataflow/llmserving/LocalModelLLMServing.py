@@ -3,6 +3,7 @@ from dataflow import get_logger
 from vllm import LLM,SamplingParams
 from huggingface_hub import snapshot_download
 from dataflow.core import LLMServingABC
+from transformers import AutoTokenizer
 
 class LocalModelLLMServing(LLMServingABC):
     '''
@@ -52,6 +53,8 @@ class LocalModelLLMServing(LLMServingABC):
             tensor_parallel_size=tensor_parallel_size,
             max_model_len=max_model_len,
         )
+        self.tokenizer = AutoTokenizer.from_pretrained(self.real_model_path, cache_dir=cache_dir)
+
     def generate(self):
         # # read input file : accept jsonl file only
         # dataframe = self.datastorage.read(self.input_file, "dataframe")
