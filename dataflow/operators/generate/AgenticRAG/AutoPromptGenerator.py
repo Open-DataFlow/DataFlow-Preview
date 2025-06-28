@@ -70,7 +70,7 @@ class AutoPromptGenerator(OperatorABC):
         dataframe = storage.read("dataframe")
         self._validate_dataframe(dataframe)
         formatted_prompts = self._reformat_prompt(dataframe)
-        answers = self.llm_serving.generate_from_input(formatted_prompts, system_prompt="")
+        answers = self.llm_serving.generate_from_input(user_inputs=formatted_prompts, system_prompt="")
 
         dataframe[self.output_key] = answers
         output_file = storage.write(dataframe)

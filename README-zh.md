@@ -9,7 +9,7 @@
 [![](https://img.shields.io/github/last-commit/Open-DataFlow/DataFlow)](https://github.com/Open-DataFlow/DataFlow/commits/main/)
 [![](https://img.shields.io/github/contributors/Open-DataFlow/DataFlow)](https://github.com/Open-DataFlow/DataFlow/graphs/contributors)
 
-[简体中文](./README.zh-CN.md) | English
+简体中文 | [English](./README.md)
 
 **[功能介绍](#功能介绍) • [快速开始](#快速开始) • [文档](https://open-dataflow.github.io/DataFlow-Doc/) • [实验结果](#实验结果)**
 

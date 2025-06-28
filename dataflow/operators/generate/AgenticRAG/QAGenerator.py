@@ -80,7 +80,7 @@ class QAGenerator:
         dataframe = storage.read("dataframe")
         self._validate_dataframe(dataframe)
         formatted_prompts = self._build_prompt(dataframe)
-        responses = self.llm_serving.generate_from_input(input=formatted_prompts, system_prompt="")
+        responses = self.llm_serving.generate_from_input(user_inputs=formatted_prompts, system_prompt="")
 
         questions, answers = zip(*[self._parse_qa(r) for r in responses])
 

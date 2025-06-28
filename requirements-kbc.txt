@@ -1,0 +1,5 @@
+mineru[core]==2.0.6
+fairy-doc[gpu]==0.1.43
+libreoffice
+chonkie==1.0.10
+trafilatura==2.0.0

@@ -6,13 +6,13 @@ on:
     paths:
       - "**/*.py"
       - "requirements.txt" 
-  pull_request:
+      - ".github/workflows/*.yml"
   pull_request:
     branches: [ "main" ]
     paths:
       - "**/*.py"
       - "requirements.txt" 
-
+      - ".github/workflows/*.yml"
 jobs:
   test:
     name: Run tests on ${{ matrix.os }} with Python ${{ matrix.python }}
@@ -36,7 +36,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install wheel
         pip install -r requirements.txt
-        pip install -e .
+        pip install -e .[vllm]
 
     - name: Run tests on Windows
       if: startsWith(matrix.os, 'windows')
@@ -55,8 +55,17 @@ jobs:
         pytest -m cpu test
 
   big-model-test:
+    if: github.repository == 'Open-DataFlow/DataFlow-Preview'
     runs-on: [self-hosted]  # 跑在你的私有 GPU runner 上
     steps:
       - uses: actions/checkout@v4
-      - run: |
+
+      - name: Install GPU dependencies
+        run: pip install -e .
+
+      - name: upgrade omegaconf
+        run: pip install --upgrade omegaconf
+
+      - name: Run GPU tests
+        run: |
           pytest -m gpu test

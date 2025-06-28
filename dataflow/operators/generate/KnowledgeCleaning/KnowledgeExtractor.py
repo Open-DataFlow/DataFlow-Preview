@@ -11,8 +11,10 @@ from mineru.backend.pipeline.pipeline_analyze import doc_analyze as pipeline_doc
 from mineru.backend.pipeline.pipeline_middle_json_mkcontent import union_make as pipeline_union_make
 from mineru.backend.pipeline.model_json_to_middle_json import result_to_middle_json as pipeline_result_to_middle_json
 from mineru.utils.enum_class import MakeMode
-# from magic_doc.docconv import DocConverter
+from magic_doc.docconv import DocConverter
 import chonkie
+import subprocess
+from trafilatura import fetch_url, extract
 
 @OPERATOR_REGISTRY.register()
 class KnowledgeExtractor(OperatorABC):
@@ -30,21 +32,29 @@ class KnowledgeExtractor(OperatorABC):
         """
         if lang == "zh":
             return (
-                "知识提取器，支持从PDF/DOC/PPT等文档中提取结构化内容，"
-                "输出Markdown格式的文本数据。"
-                "处理流程包括：\n"
-                "1. PDF文件：使用MinerU解析引擎提取文本、表格和公式\n"
-                "2. DOC/PPT文件：通过DocConverter转换为Markdown\n"
-                "3. HTML文件：提取正文内容（待实现）"
+                "知识提取算子：支持从多种文件格式中提取结构化内容并转换为标准Markdown\n"
+                "核心功能：\n"
+                "1. PDF文件：使用MinerU解析引擎提取文本/表格/公式，保留原始布局\n"
+                "2. Office文档(DOC/PPT等)：通过DocConverter转换为Markdown格式\n"
+                "3. 网页内容(HTML/XML)：使用trafilatura提取正文并转为Markdown\n"
+                "4. 纯文本(TXT/MD)：直接透传不做处理\n"
+                "特殊处理：\n"
+                "- 自动识别中英文文档(lang参数)\n"
+                "- 支持本地文件路径和URL输入\n"
+                "- 生成中间文件到指定目录(intermediate_dir)"
             )
         else:  # 默认英文
             return (
-                "Knowledge Extractor that supports content extraction "
-                "from PDF/DOC/PPT files to structured Markdown.\n"
-                "Processing pipeline:\n"
-                "1. PDF: Uses MinerU engine to extract text/tables/formulas\n"
-                "2. DOC/PPT: Converts to Markdown via DocConverter\n"
-                "3. HTML: Content extraction (TODO)"
+                "Knowledge Extractor: Converts multiple file formats to structured Markdown\n"
+                "Key Features:\n"
+                "1. PDF: Uses MinerU engine to extract text/tables/formulas with layout preservation\n"
+                "2. Office(DOC/PPT): Converts to Markdown via DocConverter\n"
+                "3. Web(HTML/XML): Extracts main content using trafilatura\n"
+                "4. Plaintext(TXT/MD): Directly passes through without conversion\n"
+                "Special Handling:\n"
+                "- Auto-detects Chinese/English documents(lang param)\n"
+                "- Supports both local files and URLs\n"
+                "- Generates intermediate files to specified directory(intermediate_dir)"
             )
         
     def _parse_pdf_to_md(
@@ -79,9 +89,9 @@ class KnowledgeExtractor(OperatorABC):
         )
         md_content = pipeline_union_make(middle_json["pdf_info"], MakeMode.MM_MD, os.path.basename(image_dir))
         # 保存Markdown
-        md_writer.write_string(f"{pdf_name}.md", md_content)
-        print(f"Markdown saved to: {os.path.join(output_dir, f'{pdf_name}.md')}")
-        return os.path.join(output_dir,f"{pdf_name}.md")
+        md_writer.write_string(f"{pdf_name}_pdf.md", md_content)
+        print(f"Markdown saved to: {os.path.join(output_dir, f'{pdf_name}_pdf.md')}")
+        return os.path.join(output_dir,f"{pdf_name}_pdf.md")
 
     def _parse_doc_to_md(self, input_file: str, output_file: str):
         """
@@ -90,14 +100,42 @@ class KnowledgeExtractor(OperatorABC):
         converter = DocConverter(s3_config=None)
         markdown_content, time_cost = converter.convert(input_file, conv_timeout=300)
         print("time cost: ", time_cost)
-        with open(output_file, "w") as f:
+        with open(output_file, "w",encoding='utf-8') as f:
             f.write(markdown_content)
         return output_file
 
-    def run(self, storage:DataFlowStorage ,raw_file, lang="ch"):
+    def _parse_xml_to_md(self, raw_file:str=None, url:str=None, output_file:str=None):
+        if(url):
+            downloaded=fetch_url(url)
+        elif(raw_file):
+            with open(raw_file, "r", encoding='utf-8') as f:
+                downloaded=f.read()
+        else:
+            raise Exception("Please provide at least one of file path and url string.")
+
+        try:
+            result=extract(downloaded, output_format="markdown", with_metadata=True)
+            self.logger.info(f"Extracted content is written into {output_file}")
+            with open(output_file,"w", encoding="utf-8") as f:
+                f.write(result)
+        except Exception as e:
+            print("Error during extract this file or link: ", e)
+
+        return output_file
+
+    def run(self, storage:DataFlowStorage ,raw_file=None, url=None,lang="ch"):
         self.logger.info("starting to extract...")
+        self.logger.info("If you are providing a url or a large file, this may take a while, please wait...")
+        if(url):
+            output_file=os.path.join(os.path.dirname(storage.first_entry_file_name), "raw/crawled.md")
+            output_file=self._parse_xml_to_md(url=url,output_file=output_file)
+            self.logger.info(f"Primary extracted result written to: {output_file}")
+            return output_file
+
         raw_file_name=os.path.splitext(os.path.basename(raw_file))[0]
         raw_file_suffix=os.path.splitext(raw_file)[1]
+        raw_file_suffix_no_dot=raw_file_suffix.replace(".","")
+        output_file=os.path.join(self.intermediate_dir,f"{raw_file_name}_{raw_file_suffix_no_dot}.md")
         if(raw_file_suffix==".pdf"):
             # optional: 是否从本地加载OCR模型
             os.environ['MINERU_MODEL_SOURCE'] = "local"
@@ -108,12 +146,14 @@ class KnowledgeExtractor(OperatorABC):
                 "txt"
             )
         elif(raw_file_suffix in [".doc", ".docx", ".pptx", ".ppt"]):
-            output_file=os.path.join(self.intermediate_dir,f"{raw_file_name}.md")
+            if(raw_file_suffix==".docx"):
+                raise Exception("Function Under Maintaining...Please try .doc format file instead.")
             output_file=self._parse_doc_to_md(raw_file, output_file)
-        elif(raw_file_suffix == ".html"):
-            # TODO: Implement the logic to extract knowledge from HTML files
-            # ...
-            pass
+        elif(raw_file_suffix in [".html", ".xml"]):
+            output_file=self._parse_xml_to_md(raw_file=raw_file,output_file=output_file)
+        elif(raw_file_suffix in [".txt",".md"]):
+            # for .txt and .md file, no action is taken
+            output_file=raw_file
         else:
             raise Exception("Unsupported file type: " + raw_file_suffix)
         

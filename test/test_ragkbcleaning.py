@@ -15,9 +15,9 @@ class KBCleaningPipeline():
     def __init__(self):
 
         self.storage = FileStorage(
-            first_entry_file_name="../dataflow/example/KBCleaningPipeline/pdf_test.json",
-            cache_path="./cache",
-            file_name_prefix="dataflow_cache_step",
+            first_entry_file_name="dataflow/example/KBCleaningPipeline/pdf_test.json",
+            cache_path="./.cache",
+            file_name_prefix="pdf_cleaning_step",
             cache_type="jsonl",
         )
 
@@ -30,7 +30,9 @@ class KBCleaningPipeline():
         local_llm_serving = LocalModelLLMServing(
             model_name_or_path="/data0/models/Qwen2.5-7B-Instruct",
             max_tokens=1024,
-            model_source="local"
+            tensor_parallel_size=4,
+            model_source="local",
+            gpu_memory_utilization=0.6,
         )
 
         self.knowledge_cleaning_step1 = KnowledgeExtractor(
@@ -45,12 +47,15 @@ class KBCleaningPipeline():
 
         self.knowledge_cleaning_step3 = KnowledgeCleaner(
             llm_serving=local_llm_serving,
+            lang="zh"
         )
         # 未来或许可以维护一个类似nn.sequential的容器，方便添加并实例化多个算子
-    def forward(self, raw_file):
+    def forward(self, url:str=None, raw_file:str=None):
         extracted=self.knowledge_cleaning_step1.run(
             storage=self.storage,
-            raw_file=raw_file
+            raw_file=raw_file,
+            url=url,
+            lang="ch"
         )
         
         self.knowledge_cleaning_step2.run(
@@ -64,7 +69,8 @@ class KBCleaningPipeline():
             input_key= "raw_content",
             output_key="cleaned",
         )
-
-model = KBCleaningPipeline()
-model.forward("/data0/hzy/test_mineru/muban.pdf")
+        
+if __name__ == "__main__":
+    model = KBCleaningPipeline()
+    model.forward(raw_file="/data0/hzy/DataFlow-Preview/test_mineru/muban.pdf")
 

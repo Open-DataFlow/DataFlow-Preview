@@ -119,19 +119,19 @@ class QAScorer(OperatorABC):
 
         # 生成四类分数和反馈
         self.logger.info("Scoring question quality...")
-        q_scores = self.llm_serving.generate_from_input(input=q_inputs, system_prompt="")
+        q_scores = self.llm_serving.generate_from_input(user_inputs=q_inputs, system_prompt="")
         q_grades, q_feedbacks = zip(*[self._parse_grade_and_feedback(r) for r in q_scores])
 
         self.logger.info("Scoring answer alignment...")
-        a_scores = self.llm_serving.generate_from_input(input=a_inputs, system_prompt="")
+        a_scores = self.llm_serving.generate_from_input(user_inputs=a_inputs, system_prompt="")
         a_grades, a_feedbacks = zip(*[self._parse_grade_and_feedback(r) for r in a_scores])
 
         self.logger.info("Scoring answer verifiability...")
-        v_scores = self.llm_serving.generate_from_input(input=v_inputs, system_prompt="")
+        v_scores = self.llm_serving.generate_from_input(user_inputs=v_inputs, system_prompt="")
         v_grades, v_feedbacks = zip(*[self._parse_grade_and_feedback(r) for r in v_scores])
 
         self.logger.info("Scoring downstream value...")
-        d_scores = self.llm_serving.generate_from_input(input=d_inputs, system_prompt="")
+        d_scores = self.llm_serving.generate_from_input(user_inputs=d_inputs, system_prompt="")
         d_grades, d_feedbacks = zip(*[self._parse_grade_and_feedback(r) for r in d_scores])
 
         # 写回结果
