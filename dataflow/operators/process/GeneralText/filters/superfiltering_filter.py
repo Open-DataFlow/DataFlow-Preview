@@ -8,21 +8,15 @@ from dataflow.utils.storage import DataFlowStorage
 @OPERATOR_REGISTRY.register()
 class SuperfilteringFilter(OperatorABC):
 
-    def __init__(self, min_score=0.0, max_score=1.0, device='cuda', model_name='', model_cache_dir='', use_API=False, API_url="http://localhost:8000", API_model_name="", prompt=None, max_length=512, batch_size=1):
+    def __init__(self, min_score=0.0, max_score=1.0, device='cuda', model_cache_dir='../dataflow_cache', max_length=512):
         self.logger = get_logger()
         self.min_score = min_score
         self.max_score = max_score
         
         self.scorer = SuperfilteringScorer(
             device=device,
-            model_name=model_name,
             model_cache_dir=model_cache_dir,
-            use_API=use_API,
-            API_url=API_url,
-            API_model_name=API_model_name,
-            prompt=prompt,
-            max_length=max_length,
-            batch_size=batch_size
+            max_length=max_length
         )
         self.logger.info(f"Initializing {self.__class__.__name__} with min_score={self.min_score} and max_score={self.max_score}...")
 

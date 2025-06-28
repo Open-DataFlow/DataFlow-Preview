@@ -8,23 +8,16 @@ from dataflow.utils.storage import DataFlowStorage
 @OPERATOR_REGISTRY.register()
 class InstagFilter(OperatorABC):
 
-    def __init__(self, min_score=0.0, max_score=1.0, model_name='', model_cache_dir='', device='cuda', max_new_tokens=1024, use_API=False, api_url='http://0.0.0.0:8003', api_model_name='', temperature=0, do_sample=False, num_return_sequences=1, return_dict_in_generate=True):
+    def __init__(self, min_score=0.0, max_score=1.0, model_cache_dir='../dataflow_cache', device='cuda', max_new_tokens=1024):
         self.logger = get_logger()
         self.min_score = min_score
         self.max_score = max_score
         
         # Initialize the scorer
         self.scorer = InstagScorer(
-            model_name=model_name,
             model_cache_dir=model_cache_dir,
-            use_API=use_API,
-            api_url=api_url,
-            api_model_name=api_model_name,
-            max_new_tokens=max_new_tokens,
-            temperature=temperature,
-            do_sample=do_sample,
-            num_return_sequences=num_return_sequences,
-            return_dict_in_generate=return_dict_in_generate,
+            device=device,
+            max_new_tokens=max_new_tokens
         )
         self.logger.info(f"Initializing {self.__class__.__name__} with min_score={self.min_score} and max_score={self.max_score}...")
 

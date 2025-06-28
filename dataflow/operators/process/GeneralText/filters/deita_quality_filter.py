@@ -7,18 +7,14 @@ from dataflow.utils.storage import DataFlowStorage
 
 @OPERATOR_REGISTRY.register()
 class DeitaQualityFilter(OperatorABC):
-    def __init__(self, min_score=0.0, max_score=1.0, device='cuda', model_name='', model_cache_dir='', max_length=512, use_API=False, api_url='', api_model_name=''):
+    def __init__(self, min_score=0.0, max_score=1.0, device='cuda', model_cache_dir='../dataflow_cache', max_length=512):
         self.logger = get_logger()
         self.min_score = min_score
         self.max_score = max_score
         self.scorer = DeitaQualityScorer(
             device=device,
-            model_name=model_name,
             model_cache_dir=model_cache_dir,
             max_length=max_length,
-            use_API=use_API,
-            api_url=api_url,
-            api_model_name=api_model_name
         )
         
         self.logger.info(f"Initializing {self.__class__.__name__} with min_score={self.min_score} and max_score={self.max_score}...")
