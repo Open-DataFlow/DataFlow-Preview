@@ -14,7 +14,7 @@ class TextPipeline():
         self.model_cache_dir = '../dataflow_cache'
         self.quality_filter1 = PairQualFilter(min_score=2.5, max_score=10000, lang='en', model_cache_dir=self.model_cache_dir)
         self.quality_filter2 = FineWebEduFilter(min_score=2.5, max_score=10000, model_cache_dir=self.model_cache_dir, device='cuda')
-        self.quality_filter3 = TextbookFilter(model_cache_dir=self.model_cache_dir)
+        self.quality_filter3 = QuratingFilter(model_cache_dir=self.model_cache_dir)
     def forward(self):
         self.quality_filter1.run(
             storage = self.storage.step(),

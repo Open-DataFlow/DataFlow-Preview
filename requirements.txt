@@ -18,5 +18,3 @@ addict
 pytest
 rich
 docstring_parser
-fasttext==0.9.3
-langkit==0.0.33
