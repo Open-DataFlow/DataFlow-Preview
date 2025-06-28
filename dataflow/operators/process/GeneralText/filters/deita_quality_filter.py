@@ -7,42 +7,44 @@ from dataflow.utils.storage import DataFlowStorage
 
 @OPERATOR_REGISTRY.register()
 class DeitaQualityFilter(OperatorABC):
-    def __init__(self, min_score=0.0, max_score=1.0, scorer_args: dict = None):
+    def __init__(self, min_score=0.0, max_score=1.0, device='cuda', model_cache_dir='./dataflow_cache', max_length=512):
         self.logger = get_logger()
         self.min_score = min_score
         self.max_score = max_score
+        self.scorer = DeitaQualityScorer(
+            device=device,
+            model_cache_dir=model_cache_dir,
+            max_length=max_length,
+        )
         
-        # Initialize the scorer
-        if scorer_args is None:
-            scorer_args = {}
-        self.scorer = DeitaQualityScorer(scorer_args)
-        self.filter_name = 'DeitaQualityFilter'
-        self.logger.info(f"Initializing {self.filter_name} with min_score={self.min_score} and max_score={self.max_score}...")
+        self.logger.info(f"Initializing {self.__class__.__name__} with min_score={self.min_score} and max_score={self.max_score}...")
 
     @staticmethod
     def get_desc(self, lang):
         return "使用Deita指令质量分类器过滤掉低质量指令数据" if lang == "zh" else "Filter out low-quality instruction data using the Deita instruction quality classifier."
 
-    def eval(self, dataframe, input_key):
-        self.logger.info(f"Start evaluating {self.filter_name}...")
+    # def eval(self, dataframe, input_key):
+    #     self.logger.info(f"Start evaluating {self.__class__.__name__}...")
 
-        # Get the scores using the scorer
-        _, scores = self.scorer(dataframe[input_key])
+    #     # Get the scores using the scorer
+    #     _, scores = self.scorer(dataframe[input_key])
 
-        # Retrieve the quality scores (assuming 'Default' is the relevant column for scores)
-        return scores['Default']
+    #     # Retrieve the quality scores (assuming 'Default' is the relevant column for scores)
+    #     return scores['Default']
 
-    def run(self, storage: DataFlowStorage, input_key: str, output_key: str):
-        self.input_key = input_key
+    def run(self, storage: DataFlowStorage, input_instruction_key: str = 'instruction', input_output_key : str = 'output', output_key: str = "deita_quality_filter_label"):
+        self.input_instruction_key = input_instruction_key
+        self.input_output_key = input_output_key
         self.output_key = output_key
         dataframe = storage.read("dataframe")
-        self.logger.info(f"Running {self.filter_name}...")
+        self.logger.info(f"Running {self.__class__.__name__}...")
 
         # Get the quality scores
-        scores = self.eval(dataframe, self.input_key)
+        scores = self.scorer.eval(dataframe, input_instruction_key, input_output_key)
 
+        dataframe[self.output_key] = scores
         # Filter records based on the score range
-        filtered_dataframe = dataframe[(scores >= self.min_score) & (scores <= self.max_score)]
+        filtered_dataframe = dataframe[(dataframe[self.output_key] >= self.min_score) & (dataframe[self.output_key] <= self.max_score)]
 
         # Write the filtered dataframe back to storage
         storage.write(filtered_dataframe)

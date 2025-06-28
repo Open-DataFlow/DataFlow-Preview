@@ -1,9 +1,11 @@
-datasets
+datasets<=3.2
 numpy<2.0.0
 scipy
 torch
+torchvision
+torchaudio
 tqdm
-transformers
+transformers==4.51.3
 vllm==0.6.3
 aisuite
 math_verify

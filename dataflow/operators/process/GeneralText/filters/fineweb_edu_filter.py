@@ -6,7 +6,7 @@ from dataflow.utils.utils import get_logger
 
 @OPERATOR_REGISTRY.register()
 class FineWebEduFilter(OperatorABC):
-    def __init__(self, min_score: float = 2.5, max_score: float = 10000, model_cache_dir: str = '../dataflow_cache', device: str = 'cuda'):
+    def __init__(self, min_score: float = 2.5, max_score: float = 10000, model_cache_dir: str = './dataflow_cache', device: str = 'cuda'):
         self.min_score = min_score
         self.max_score = max_score
         self.logger = get_logger()

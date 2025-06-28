@@ -8,7 +8,7 @@ class AnswerGeneratorPrompt:
     def __init__(self):
         pass
 
-    def Classic_COT_Prompt(self,question: str) -> str:
+    def Classic_COT_Prompt(self, question: str) -> str:
         """
         为给定数学题目生成系统提示信息
         """

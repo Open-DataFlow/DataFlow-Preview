@@ -8,7 +8,7 @@ import numpy as np
 
 @OPERATOR_REGISTRY.register()
 class FineWebEduScorer(OperatorABC):
-    def __init__(self, model_cache_dir: str = '../dataflow_cache', device: str = 'cuda'):
+    def __init__(self, model_cache_dir: str = './dataflow_cache', device: str = 'cuda'):
         self.model_name = 'HuggingFaceTB/fineweb-edu-classifier'
         self.model_cache_dir = model_cache_dir
         self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')

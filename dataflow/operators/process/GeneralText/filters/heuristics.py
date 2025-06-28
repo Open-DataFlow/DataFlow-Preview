@@ -401,9 +401,10 @@ class HtmlEntityFilter(OperatorABC):
 @OPERATOR_REGISTRY.register()
 class IDCardFilter(OperatorABC):
 
-    def __init__(self):
+    def __init__(self, threshold:int=3):
         self.logger = get_logger()
         self.filter_name = 'IDCardFilter'
+        self.threshold = threshold
         self.logger.info(f"Initializing {self.filter_name}...")
 
     @staticmethod
@@ -421,8 +422,9 @@ class IDCardFilter(OperatorABC):
 
         for text in tqdm(dataframe[self.input_key], desc=f"Implementing {self.filter_name}"):
             if text:
-                has_id_card = bool(pattern.search(text))
-                valid_checks.append(not has_id_card)
+                matches = pattern.findall(text)
+                has_too_many_id_terms = len(matches) >= self.threshold
+                valid_checks.append(not has_too_many_id_terms)
             else:
                 valid_checks.append(False)
 
