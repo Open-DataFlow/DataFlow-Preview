@@ -39,7 +39,7 @@ class PTTextPipeline():
             file_name_prefix="dataflow_cache_step",
             cache_type="jsonl",
         )
-        self.model_cache_dir = '/mnt/public/code/zzy/dataflow_cache'
+        self.model_cache_dir = './dataflow_cache'
         self.language_filter = LanguageFilter(allowed_languages = '__label__eng_Latn', model_cache_dir = self.model_cache_dir)        
         self.remove_extra_spaces_refiner = RemoveExtraSpacesRefiner()
         self.remove_emoji_refiner = RemoveEmojiRefiner()

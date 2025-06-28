@@ -12,7 +12,7 @@ import pandas as pd
 # cited from: Superfiltering: Weak-to-Strong Data Filtering for Fast Instruction-Tuning
 @OPERATOR_REGISTRY.register()
 class SuperfilteringScorer(OperatorABC):
-    def __init__(self, device='cuda', model_cache_dir='../dataflow_cache', max_length=512):
+    def __init__(self, device='cuda', model_cache_dir='./dataflow_cache', max_length=512):
         self.device = device
         self.model_name = 'gpt2'
         self.model_cache_dir = model_cache_dir

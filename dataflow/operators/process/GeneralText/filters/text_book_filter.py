@@ -7,7 +7,7 @@ from dataflow.operators.eval.GeneralText import TextbookScorer
 @OPERATOR_REGISTRY.register()
 class TextbookFilter(OperatorABC):
 
-    def __init__(self, min_score=0.99, max_score=1, model_cache_dir:str='../dataflow_cache'):
+    def __init__(self, min_score=0.99, max_score=1, model_cache_dir:str='./dataflow_cache'):
         self.min_score = min_score
         self.max_score = max_score
         self.scorer = TextbookScorer(model_cache_dir=model_cache_dir)

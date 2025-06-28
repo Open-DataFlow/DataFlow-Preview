@@ -1,7 +1,7 @@
 import pytest
 from test_reasoning import ReasoningPipeline
 from test_reasoning_pretrain import ReasoningPipeline_Pretrain
-from test_general_text import TextPipeline
+from test_pt_filter import PTTextPipeline
 from test_agentic_rag import AgenticRAGPipeline
 @pytest.fixture(scope="session")
 def llm_serving():
@@ -21,8 +21,8 @@ def test_reasoning_pipeline(llm_serving):
     resoning_pipe.forward()
 
 @pytest.mark.gpu
-def test_text_pipeline(llm_serving):
-    text_pipe = TextPipeline(llm_serving=llm_serving)
+def test_text_pipeline():
+    text_pipe = PTTextPipeline()
     text_pipe.forward()
 
 @pytest.mark.gpu

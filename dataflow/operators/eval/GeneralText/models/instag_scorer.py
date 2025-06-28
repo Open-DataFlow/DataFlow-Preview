@@ -13,7 +13,7 @@ import json
 
 @OPERATOR_REGISTRY.register()
 class InstagScorer(OperatorABC):
-    def __init__(self, model_cache_dir='../dataflow_cache', device='cuda', max_new_tokens=1024, temperature=0, do_sample=False, num_return_sequences=1, return_dict_in_generate=True):
+    def __init__(self, model_cache_dir='./dataflow_cache', device='cuda', max_new_tokens=1024, temperature=0, do_sample=False, num_return_sequences=1, return_dict_in_generate=True):
         # Initialize parameters and model
         self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
         self.model_name = 'OFA-Sys/InsTagger'

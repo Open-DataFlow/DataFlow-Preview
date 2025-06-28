@@ -18,7 +18,7 @@ class SFTTextPipeline():
             cache_type="jsonl",
         )
         
-        self.model_cache_dir = '../dataflow_cache'
+        self.model_cache_dir = './dataflow_cache'
         self.word_number_filter_step1 = WordNumberFilter(
             min_words=20,
             max_words=1000
