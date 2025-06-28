@@ -33,13 +33,9 @@ class Text2SQLPipeline():
 
         self.sql_difficulty_classifier_step2 = SQLDifficultyClassifier()
 
-        # self.schema_linking_step3 = SchemaLinking(
-        #     table_info_file=table_info_file,
-        #     model_path="", # download the model from https://pan.quark.cn/s/418c417127ae or https://drive.google.com/file/d/1xzNvv5h-ZjhjOOZ-ePv1xg_n3YbUNLWi/view?usp=sharing
-        #     selection_mode="eval",                       
-        #     num_top_k_tables=5,                           
-        #     num_top_k_columns=5     
-        # )
+        self.schema_linking_step3 = SchemaLinking(
+            table_info_file=table_info_file
+        )
 
         self.database_schema_extractor_step4 = DatabaseSchemaExtractor(
             table_info_file=table_info_file,
@@ -93,17 +89,12 @@ class Text2SQLPipeline():
             output_difficulty_key="sql_component_difficulty"
         )
 
-        # self.schema_linking_step3.run(
-        #     storage=self.storage.step(),
-        #     input_sql_key=input_sql_key,
-        #     input_dbid_key=input_dbid_key,
-        #     input_question_key=input_question_key,
-        #     input_table_names_original_key="table_names_original",
-        #     input_table_names_statement_key="table_names",
-        #     input_column_names_original_key="column_names_original",    
-        #     input_column_names_statement_key="column_names",
-        #     output_schema_key="selected_schema"        
-        # )
+        self.schema_linking_step3.run(
+            storage=self.storage.step(),
+            input_sql_key=input_sql_key,
+            input_dbid_key=input_dbid_key,
+            output_used_schema_key="selected_schema"        
+        )
 
         self.database_schema_extractor_step4.run(
             storage=self.storage.step(),
