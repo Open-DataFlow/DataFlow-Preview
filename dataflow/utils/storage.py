@@ -157,7 +157,7 @@ class FileStorage(DataFlowStorage):
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         print(f"Writing data to {file_path} with type {self.cache_type}")
         if self.cache_type == "json":
-            dataframe.to_json(file_path, orient="records", force_ascii=False)
+            dataframe.to_json(file_path, orient="records", force_ascii=False, indent=2)
         elif self.cache_type == "jsonl":
             dataframe.to_json(file_path, orient="records", lines=True, force_ascii=False)
         elif self.cache_type == "csv":

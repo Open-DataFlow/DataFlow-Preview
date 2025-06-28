@@ -2,9 +2,13 @@ import sys
 from dataflow.utils.registry import LazyLoader
 
 from .Reasoning import *
+<<<<<<< Updated upstream
 from .Text2SQL import *
 
 # from .KnowledgeCleaning import *
+=======
+from .KnowledgeCleaning import *
+>>>>>>> Stashed changes
 from .AgenticRAG import *
 
 
@@ -30,6 +34,7 @@ _import_structure = {
     "CorpusTextSplitter": (cur_path + "KnowledgeCleaning/CorpusTextSplitter.py", "CorpusTextSplitter"),
     "KnowledgeExtractor": (cur_path + "KnowledgeCleaning/KnowledgeExtractor.py", "KnowledgeExtractor"),
     "KnowledgeCleaner": (cur_path + "KnowledgeCleaning/KnowledgeCleaner.py", "KnowledgeCleaner"),
+    "MultiHopQAGenerator": (cur_path + "KnowledgeCleaning/MultiHopQAGenerator.py", "MultiHopQAGenerator"),
     "AutoPromptGenerator": (cur_path + "AgenticRAG/AutoPromptGenerator.py", "AutoPromptGenerator"),
     "QAScorer": (cur_path + "AgenticRAG/QAScorer.py", "QAScorer"),
     "QAGenerator": (cur_path + "AgenticRAG/QAGenerator.py", "QAGenerator"),

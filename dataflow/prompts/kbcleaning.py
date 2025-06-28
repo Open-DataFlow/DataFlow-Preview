@@ -3,15 +3,94 @@ class KnowledgeCleanerPrompt:
     知识清洗提示词生成器，支持中英文多语言适配
     Specialized in refining raw content with multilingual support.
     '''
-    def __init__(self, lang: str = "zh", strict_mode: bool = True):
+    def __init__(self, lang: str = "en", strict_mode: bool = True):
         self.lang = lang
         self.strict_mode = strict_mode
         self._init_prompt_header()
 
     def _init_prompt_header(self):
         """根据语言初始化提示词头部模板"""
-        if self.lang == "zh":
+        if self.lang == "en":
             self.prompt_header = f"""
+You are a meticulous Knowledge Refinement Engineer. Apply these rules STRICTLY:
+
+1. Remove redundant tags but retain:
+   - Semantic tags like <table>, <code>
+   - Meaningful attributes
+
+2. Normalize special characters:
+   - Standardize quotes and dashes
+   - Convert ellipsis (...)
+
+3. URL handling:
+   - Preserve footnote URLs
+   - Extract display texts
+
+4. Text structure:
+   - Maintain paragraph/list breaks
+   - Keep code indentation
+   - Limit empty lines (max=2)
+
+5. Reference processing (NEW):
+   - Images → "[Image: alt_text]"
+   - Signatures → "[Signature]"
+
+6. Code blocks: {"(strict)" if self.strict_mode else ""}
+   - {"Force closure" if self.strict_mode else "Preserve raw"}
+   - Mark fragments as /*...*/
+
+7. Absolute fidelity:
+   - NO fact/number modifications
+   - NO term paraphrasing
+   - NO table structure changes
+
+8. Security Processing (NEW):
+   - PII: Phone/ID/Email must be masked, e.g. 
+     Original: phone 13800138000 → Processed: phone 138****8000
+   - Classified: Mark 【Confidential】as 〖SEC∶classified〗
+   - Illegal: Replace sensitive content with 〖ILLEGAL∶removed〗
+   - Encryption tags: Use 〖〗for encrypted sections
+
+Example:
+Input:
+<div class="article">
+  <h1>Knowledge Cleaning™</h1>
+  <figure>
+    <img src="process.png" alt="Cleaning Flowchart" title="Three Phases">
+    <figcaption>Fig.1: Core Process</figcaption>
+  </figure>
+  <p>Contact: <span class="phone">+8613800138000</span></p>
+  <p>Text with "curly quotes" and – dash – here…</p>
+  <table><tr><td>Table data</td></tr></table>
+  <pre><code>function test() {{</code></pre>
+  <blockquote>Signature: John <img src="sign.png" alt="e-signature"></blockquote>
+  <p>Confidential: Project budget is 【Secret】</p>
+  <p>Diagram: <img src="demo.jpg" class="diagram"></p>
+</div>
+
+Output:
+<cleaned_start>
+Knowledge Cleaning™
+
+[Image: Cleaning Flowchart (Three Phases) Fig.1: Core Process]
+
+Contact: +86*****8000
+
+Text with "straight quotes" and - dash - here...
+
+<table><tr><td>Table data</td></tr></table>
+
+<code>function test() {{ /*...*/ }}</code>
+
+[Signature]Signature: John [Image: e-signature]
+
+〖SEC∶classified content〗
+
+Diagram: [Image: Diagram demo.jpg]
+<cleaned_end>
+"""
+        else:
+            self.prompt_header =f"""
 你是一名严谨的知识清洗工程师。请严格按照以下规则处理原始内容：
 
 1. 移除冗余HTML/XML标签，但保留：
@@ -93,99 +172,10 @@ class KnowledgeCleanerPrompt:
 示意图：[引用图片：示意图demo.jpg]
 <cleaned_end>
 """
-        else:
-            self.prompt_header = f"""
-You are a meticulous Knowledge Refinement Engineer. Apply these rules STRICTLY:
-
-1. Remove redundant tags but retain:
-   - Semantic tags like <table>, <code>
-   - Meaningful attributes
-
-2. Normalize special characters:
-   - Standardize quotes and dashes
-   - Convert ellipsis (...)
-
-3. URL handling:
-   - Preserve footnote URLs
-   - Extract display texts
-
-4. Text structure:
-   - Maintain paragraph/list breaks
-   - Keep code indentation
-   - Limit empty lines (max=2)
-
-5. Reference processing (NEW):
-   - Images → "[Image: alt_text]"
-   - Signatures → "[Signature]"
-
-6. Code blocks: {"(strict)" if self.strict_mode else ""}
-   - {"Force closure" if self.strict_mode else "Preserve raw"}
-   - Mark fragments as /*...*/
-
-7. Absolute fidelity:
-   - NO fact/number modifications
-   - NO term paraphrasing
-   - NO table structure changes
-
-8. Security Processing (NEW):
-   - PII: Phone/ID/Email must be masked, e.g. 
-     Original: phone 13800138000 → Processed: phone 138****8000
-   - Classified: Mark 【Confidential】as 〖SEC∶classified〗
-   - Illegal: Replace sensitive content with 〖ILLEGAL∶removed〗
-   - Encryption tags: Use 〖〗for encrypted sections
-
-Example:
-Input:
-<div class="article">
-  <h1>Knowledge Cleaning™</h1>
-  <figure>
-    <img src="process.png" alt="Cleaning Flowchart" title="Three Phases">
-    <figcaption>Fig.1: Core Process</figcaption>
-  </figure>
-  <p>Contact: <span class="phone">+8613800138000</span></p>
-  <p>Text with "curly quotes" and – dash – here…</p>
-  <table><tr><td>Table data</td></tr></table>
-  <pre><code>function test() {{</code></pre>
-  <blockquote>Signature: John <img src="sign.png" alt="e-signature"></blockquote>
-  <p>Confidential: Project budget is 【Secret】</p>
-  <p>Diagram: <img src="demo.jpg" class="diagram"></p>
-</div>
-
-Output:
-<cleaned_start>
-Knowledge Cleaning™
-
-[Image: Cleaning Flowchart (Three Phases) Fig.1: Core Process]
-
-Contact: +86*****8000
-
-Text with "straight quotes" and - dash - here...
-
-<table><tr><td>Table data</td></tr></table>
-
-<code>function test() {{ /*...*/ }}</code>
-
-[Signature]Signature: John [Image: e-signature]
-
-〖SEC∶classified content〗
-
-Diagram: [Image: Diagram demo.jpg]
-<cleaned_end>
-"""
 
     def Classic_COT_Prompt(self, raw_content: str) -> str:
         """生成知识清洗的思维链提示词（保持原有格式）"""
-        if self.lang == "zh":
-            processing_steps = """
-处理步骤：
-1. [标签分析] 识别并分类所有标记标签
-2. [引用提取] 分离图片/表格/签名等引用内容
-3. [字符审核] 记录特殊字符变更
-4. [结构检查] 验证文本层级
-5. [最终输出] 生成清洗后文本
-""".strip()
-            output_requirement = '响应必须只包含清洗后文本，以<cleaned_start>开头，<cleaned_end>结尾，无其他内容。'
-        else:
+        if self.lang == "en":
             processing_steps = """
 Processing Steps:
 1. [Tag Analysis] Classify markup tags
@@ -195,6 +185,16 @@ Processing Steps:
 5. [Final Output] Generate cleaned text
 """.strip()
             output_requirement = 'Response must contain ONLY cleaned text between <cleaned_start> and <cleaned_end>.'
+        else:
+            processing_steps = """
+处理步骤：
+1. [标签分析] 识别并分类所有标记标签
+2. [引用提取] 分离图片/表格/签名等引用内容
+3. [字符审核] 记录特殊字符变更
+4. [结构检查] 验证文本层级
+5. [最终输出] 生成清洗后文本
+""".strip()
+            output_requirement = '响应必须只包含清洗后文本，以<cleaned_start>开头，<cleaned_end>结尾，无其他内容。'
 
         return f"""
 {self.prompt_header}
