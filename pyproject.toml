@@ -48,10 +48,8 @@ packages = ["dataflow"]  # 显式指定主包
 [tool.setuptools.dynamic]
 version = {attr = "dataflow.version.__version__"}
 dependencies = {file = "requirements.txt"}
-<<<<<<< Updated upstream
+
 
 [project.optional-dependencies]
 vllm = ["vllm<0.8"]
-=======
-optional-dependencies = { all = {file = "requirements-all.txt"}, text = {file = "requirements-text.txt"}, min = {file = "requirements-min.txt"}}
->>>>>>> Stashed changes
+
