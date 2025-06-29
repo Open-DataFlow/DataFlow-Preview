@@ -22,4 +22,6 @@ pydantic
 nltk
 func_timeout
 
-
+# knowledge base cleaning
+chonkie
+trafilatura
