@@ -25,4 +25,32 @@ pydantic
 nltk
 func_timeout
 
-
+# general text
+fasttext
+filelock
+google-api-core
+google-api-python-client
+google-auth
+google-auth-httplib2
+googleapis-common-protos
+kenlm
+langkit
+loguru
+openai
+prettytable
+pyspark
+sentencepiece
+vendi-score
+wget
+nltk
+presidio_analyzer[transformers]
+presidio_anonymizer
+gdown
+simhash
+datasketch
+gensim
+pot
+hlepor
+nptyping
+sacrebleu
+bert_score
