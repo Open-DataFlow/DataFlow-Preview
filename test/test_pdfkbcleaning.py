@@ -75,19 +75,12 @@ class KBCleaningPipeline():
             input_key= "raw_content",
             output_key="cleaned",
         )
-<<<<<<< Updated upstream:test/test_ragkbcleaning.py
-        
-if __name__ == "__main__":
-    model = KBCleaningPipeline()
-    model.forward(raw_file="/data0/hzy/DataFlow-Preview/test_mineru/muban.pdf")
-=======
-
         self.knowledge_cleaning_step4.run(
             storage=self.storage.step(),
             input_key="cleaned",
             output_key="MultiHop_QA"
         )
-model = KBCleaningPipeline()
-model.forward(raw_file="/data0/hzy/DataFlow-Preview/dataflow/example/KBCleaningPipeline/test.doc")
->>>>>>> Stashed changes:test/test_pdfkbcleaning.py
-
+        
+if __name__ == "__main__":
+    model = KBCleaningPipeline()
+    model.forward(raw_file="/data0/hzy/DataFlow-Preview/test_mineru/muban.pdf")

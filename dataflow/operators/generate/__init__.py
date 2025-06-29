@@ -2,13 +2,10 @@ import sys
 from dataflow.utils.registry import LazyLoader
 
 from .Reasoning import *
-<<<<<<< Updated upstream
 from .Text2SQL import *
 
 # from .KnowledgeCleaning import *
-=======
 from .KnowledgeCleaning import *
->>>>>>> Stashed changes
 from .AgenticRAG import *
 
 
