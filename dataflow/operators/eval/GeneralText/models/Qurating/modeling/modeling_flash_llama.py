@@ -34,13 +34,15 @@ from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
 from transformers.models.llama.configuration_llama import LlamaConfig
 
-from flash_attn import flash_attn_kvpacked_func, flash_attn_varlen_kvpacked_func, flash_attn_with_kvcache
-from flash_attn.bert_padding import unpad_input, pad_input
-
 try:
+    from flash_attn import flash_attn_kvpacked_func, flash_attn_varlen_kvpacked_func, flash_attn_with_kvcache
+    from flash_attn.bert_padding import unpad_input, pad_input
     from flash_attn.layers.rotary import apply_rotary_emb_func
-except ImportError:
-    raise ImportError('Please install RoPE kernels: `pip install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary`')
+except ImportError as e:
+    if 'flash_attn.layers.rotary' in str(e):
+        raise ImportError('Please install RoPE kernels: `pip install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary`')
+    else:
+        raise ImportError('Please install flash_attention dependency in GPU environment')
 
 
 logger = logging.get_logger(__name__)
