@@ -21,7 +21,9 @@ class Text2SQLPipeline():
         else:
             api_llm_serving = llm_serving
 
-        db_root_path = "../dataflow/example/Text2SQLPipeline/dev_databases"
+        # Please download the demo database from the following URL:
+        # https://huggingface.co/datasets/Open-Dataflow/dataflow-Text2SQL-database-example
+        db_root_path = "" 
         table_info_file = "../dataflow/example/Text2SQLPipeline/dev_tables.jsonl"
         
         self.sql_filter_step1 = SQLFilter(
