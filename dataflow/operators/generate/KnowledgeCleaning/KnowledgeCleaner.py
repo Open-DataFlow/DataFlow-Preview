@@ -12,9 +12,9 @@ class KnowledgeCleaner(OperatorABC):
     '''
         KnowledgeCleaner is a class that cleans knowledge for RAG to make them more accurate, reliable and readable.
     '''
-    def __init__(self, llm_serving: LLMServingABC, lang="zh"):
+    def __init__(self, llm_serving: LLMServingABC, lang="en"):
         self.logger = get_logger()
-        self.prompts = KnowledgeCleanerPrompt(lang="zh")    
+        self.prompts = KnowledgeCleanerPrompt(lang=lang)    
         self.llm_serving = llm_serving
     
     @staticmethod

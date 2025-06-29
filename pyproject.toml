@@ -49,5 +49,7 @@ packages = ["dataflow"]  # 显式指定主包
 version = {attr = "dataflow.version.__version__"}
 dependencies = {file = "requirements.txt"}
 
+
 [project.optional-dependencies]
 vllm = ["vllm<0.8"]
+

@@ -175,6 +175,7 @@ class PTTextPipeline():
             storage = self.storage.step(),
             input_key='raw_content',
         )
-
-model = PTTextPipeline()
-model.forward()
+if __name__ == "__main__":
+    # This is the entry point for the pipeline
+    model = PTTextPipeline()
+    model.forward()

@@ -3,18 +3,8 @@ from dataflow.utils.registry import OPERATOR_REGISTRY
 from dataflow import get_logger
 from dataflow.utils.storage import DataFlowStorage
 from dataflow.core import OperatorABC
-
+from dataflow.utils.kbcleaning import _parse_pdf_to_md,_parse_doc_to_md,_parse_xml_to_md
 import os
-from pathlib import Path
-from mineru.data.data_reader_writer import FileBasedDataWriter
-from mineru.backend.pipeline.pipeline_analyze import doc_analyze as pipeline_doc_analyze
-from mineru.backend.pipeline.pipeline_middle_json_mkcontent import union_make as pipeline_union_make
-from mineru.backend.pipeline.model_json_to_middle_json import result_to_middle_json as pipeline_result_to_middle_json
-from mineru.utils.enum_class import MakeMode
-from magic_doc.docconv import DocConverter
-import chonkie
-import subprocess
-from trafilatura import fetch_url, extract
 
 @OPERATOR_REGISTRY.register()
 class KnowledgeExtractor(OperatorABC):
@@ -26,7 +16,7 @@ class KnowledgeExtractor(OperatorABC):
         self.intermediate_dir=kwargs.get("intermediate_dir", "intermediate")
         
     @staticmethod
-    def get_desc(lang="en"):
+    def get_desc(self, lang="en"):
         """
         返回算子功能描述 (根据run()函数的功能实现)
         """
@@ -56,79 +46,13 @@ class KnowledgeExtractor(OperatorABC):
                 "- Supports both local files and URLs\n"
                 "- Generates intermediate files to specified directory(intermediate_dir)"
             )
-        
-    def _parse_pdf_to_md(
-        self,
-        input_pdf_path: str, 
-        output_dir: str,      
-        lang: str = "ch",     
-        parse_method: str = "auto"  # 解析方法：auto/txt/ocr
-    ):
-        """
-        将PDF转换为Markdown（仅使用Pipeline后端）
-        """
-        # 读取PDF文件
-        pdf_bytes = Path(input_pdf_path).read_bytes()
-        pdf_name = Path(input_pdf_path).stem
 
-        # 解析PDF
-        infer_results, all_image_lists, all_pdf_docs, _, ocr_enabled_list = pipeline_doc_analyze(
-            [pdf_bytes], [lang], parse_method=parse_method
-        )
-
-        # 准备输出目录
-        image_dir = os.path.join(output_dir, f"{pdf_name}_images")
-        os.makedirs(image_dir, exist_ok=True)
-        image_writer = FileBasedDataWriter(image_dir)
-        md_writer = FileBasedDataWriter(output_dir)
-
-        # 生成中间结果和Markdown
-        middle_json = pipeline_result_to_middle_json(
-            infer_results[0], all_image_lists[0], all_pdf_docs[0], 
-            image_writer, lang, ocr_enabled_list[0], True
-        )
-        md_content = pipeline_union_make(middle_json["pdf_info"], MakeMode.MM_MD, os.path.basename(image_dir))
-        # 保存Markdown
-        md_writer.write_string(f"{pdf_name}_pdf.md", md_content)
-        print(f"Markdown saved to: {os.path.join(output_dir, f'{pdf_name}_pdf.md')}")
-        return os.path.join(output_dir,f"{pdf_name}_pdf.md")
-
-    def _parse_doc_to_md(self, input_file: str, output_file: str):
-        """
-           support conversion of doc/ppt/pptx/pdf files to markdowns
-        """
-        converter = DocConverter(s3_config=None)
-        markdown_content, time_cost = converter.convert(input_file, conv_timeout=300)
-        print("time cost: ", time_cost)
-        with open(output_file, "w",encoding='utf-8') as f:
-            f.write(markdown_content)
-        return output_file
-
-    def _parse_xml_to_md(self, raw_file:str=None, url:str=None, output_file:str=None):
-        if(url):
-            downloaded=fetch_url(url)
-        elif(raw_file):
-            with open(raw_file, "r", encoding='utf-8') as f:
-                downloaded=f.read()
-        else:
-            raise Exception("Please provide at least one of file path and url string.")
-
-        try:
-            result=extract(downloaded, output_format="markdown", with_metadata=True)
-            self.logger.info(f"Extracted content is written into {output_file}")
-            with open(output_file,"w", encoding="utf-8") as f:
-                f.write(result)
-        except Exception as e:
-            print("Error during extract this file or link: ", e)
-
-        return output_file
-
-    def run(self, storage:DataFlowStorage ,raw_file=None, url=None,lang="ch"):
+    def run(self, storage:DataFlowStorage ,raw_file=None, url=None,lang="en"):
         self.logger.info("starting to extract...")
         self.logger.info("If you are providing a url or a large file, this may take a while, please wait...")
         if(url):
             output_file=os.path.join(os.path.dirname(storage.first_entry_file_name), "raw/crawled.md")
-            output_file=self._parse_xml_to_md(url=url,output_file=output_file)
+            output_file=_parse_xml_to_md(url=url,output_file=output_file)
             self.logger.info(f"Primary extracted result written to: {output_file}")
             return output_file
 
@@ -137,20 +61,46 @@ class KnowledgeExtractor(OperatorABC):
         raw_file_suffix_no_dot=raw_file_suffix.replace(".","")
         output_file=os.path.join(self.intermediate_dir,f"{raw_file_name}_{raw_file_suffix_no_dot}.md")
         if(raw_file_suffix==".pdf"):
+            try:
+                from mineru.data.data_reader_writer import FileBasedDataWriter
+                from mineru.backend.pipeline.pipeline_analyze import doc_analyze as pipeline_doc_analyze
+                from mineru.backend.pipeline.pipeline_middle_json_mkcontent import union_make as pipeline_union_make
+                from mineru.backend.pipeline.model_json_to_middle_json import result_to_middle_json as pipeline_result_to_middle_json
+                from mineru.utils.enum_class import MakeMode
+            except:
+                raise Exception(
+                    """
+MinerU is not installed in this environment yet.
+Please refer to https://github.com/opendatalab/mineru to install.
+Or you can just execute 'pip install mineru[pipeline]' and 'mineru-models-download' to fix this error.
+please make sure you have gpu on your machine.
+"""
+                )
             # optional: 是否从本地加载OCR模型
             os.environ['MINERU_MODEL_SOURCE'] = "local"
-            output_file=self._parse_pdf_to_md(
+            output_file=_parse_pdf_to_md(
                 raw_file,
                 self.intermediate_dir,
                 lang,
                 "txt"
             )
         elif(raw_file_suffix in [".doc", ".docx", ".pptx", ".ppt"]):
+            try:
+                from magic_doc.docconv import DocConverter
+            except:
+                raise Exception(
+                    """
+Fairy-doc is not installed in this environment yet.
+Please refer to https://github.com/opendatalab/magic-doc to install.
+Or you can just execute 'apt-get/yum/brew install libreoffice' and 'pip install fairy-doc[gpu]' to fix this error.
+please make sure you have gpu on your machine.
+"""
+                )
             if(raw_file_suffix==".docx"):
                 raise Exception("Function Under Maintaining...Please try .doc format file instead.")
-            output_file=self._parse_doc_to_md(raw_file, output_file)
+            output_file=_parse_doc_to_md(raw_file, output_file)
         elif(raw_file_suffix in [".html", ".xml"]):
-            output_file=self._parse_xml_to_md(raw_file=raw_file,output_file=output_file)
+            output_file=_parse_xml_to_md(raw_file=raw_file,output_file=output_file)
         elif(raw_file_suffix in [".txt",".md"]):
             # for .txt and .md file, no action is taken
             output_file=raw_file
@@ -159,3 +109,4 @@ class KnowledgeExtractor(OperatorABC):
         
         self.logger.info(f"Primary extracted result written to: {output_file}")
         return output_file
+

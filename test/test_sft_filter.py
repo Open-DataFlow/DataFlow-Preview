@@ -66,6 +66,7 @@ class SFTTextPipeline():
             storage=self.storage.step(),
             input_instruction_key='instruction'
         )
-        
-pipeline = SFTTextPipeline()
-pipeline.forward()
+if __name__ == "__main__":
+    # This is the entry point for the pipeline
+    pipeline = SFTTextPipeline()
+    pipeline.forward()
