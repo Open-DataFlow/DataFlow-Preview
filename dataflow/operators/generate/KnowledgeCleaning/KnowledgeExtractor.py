@@ -4,7 +4,6 @@ from dataflow import get_logger
 from dataflow.utils.storage import DataFlowStorage
 from dataflow.core import OperatorABC
 from dataflow.utils.kbcleaning import _parse_pdf_to_md,_parse_doc_to_md,_parse_xml_to_md
-
 import os
 
 @OPERATOR_REGISTRY.register()
@@ -64,12 +63,17 @@ class KnowledgeExtractor(OperatorABC):
         if(raw_file_suffix==".pdf"):
             try:
                 from mineru.data.data_reader_writer import FileBasedDataWriter
+                from mineru.backend.pipeline.pipeline_analyze import doc_analyze as pipeline_doc_analyze
+                from mineru.backend.pipeline.pipeline_middle_json_mkcontent import union_make as pipeline_union_make
+                from mineru.backend.pipeline.model_json_to_middle_json import result_to_middle_json as pipeline_result_to_middle_json
+                from mineru.utils.enum_class import MakeMode
             except:
                 raise Exception(
                     """
 MinerU is not installed in this environment yet.
 Please refer to https://github.com/opendatalab/mineru to install.
 Or you can just execute 'pip install mineru[pipeline]' and 'mineru-models-download' to fix this error.
+please make sure you have gpu on your machine.
 """
                 )
             # optional: 是否从本地加载OCR模型
@@ -81,6 +85,17 @@ Or you can just execute 'pip install mineru[pipeline]' and 'mineru-models-downlo
                 "txt"
             )
         elif(raw_file_suffix in [".doc", ".docx", ".pptx", ".ppt"]):
+            try:
+                from magic_doc.docconv import DocConverter
+            except:
+                raise Exception(
+                    """
+Fairy-doc is not installed in this environment yet.
+Please refer to https://github.com/opendatalab/magic-doc to install.
+Or you can just execute 'apt-get/yum/brew install libreoffice' and 'pip install fairy-doc[gpu]' to fix this error.
+please make sure you have gpu on your machine.
+"""
+                )
             if(raw_file_suffix==".docx"):
                 raise Exception("Function Under Maintaining...Please try .doc format file instead.")
             output_file=_parse_doc_to_md(raw_file, output_file)

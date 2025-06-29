@@ -18,3 +18,5 @@ cache_local
 .cache
 
 test_mineru
+
+requirements-kbc.txt

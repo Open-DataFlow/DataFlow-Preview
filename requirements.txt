@@ -23,6 +23,5 @@ nltk
 func_timeout
 
 # knowledge base cleaning
-fairy-doc[gpu]
 chonkie
 trafilatura
