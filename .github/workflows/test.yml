@@ -55,7 +55,7 @@ jobs:
         pytest -m cpu test
 
   big-model-test:
-    if: github.repository == 'Open-DataFlow/DataFlow-Preview'
+    if: github.repository == 'OpenDCAI/DataFlow-Preview'
     runs-on: [self-hosted]  # 跑在你的私有 GPU runner 上
     steps:
       - uses: actions/checkout@v4
