@@ -5,8 +5,7 @@ torch
 torchvision
 torchaudio
 tqdm
-transformers==4.51.3
-vllm==0.6.3
+transformers<=4.51.3
 aisuite
 math_verify
 word2number
@@ -25,4 +24,32 @@ pydantic
 nltk
 func_timeout
 
-
+# general text
+fasttext
+filelock
+google-api-core
+google-api-python-client
+google-auth
+google-auth-httplib2
+googleapis-common-protos
+kenlm
+langkit
+loguru
+openai
+prettytable
+pyspark
+sentencepiece
+vendi-score
+wget
+nltk
+presidio_analyzer[transformers]
+presidio_anonymizer
+gdown
+simhash
+datasketch
+gensim
+pot
+hlepor
+nptyping
+sacrebleu
+bert_score

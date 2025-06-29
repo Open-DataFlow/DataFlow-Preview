@@ -4,29 +4,29 @@
   <img src="./static/images/Face.jpg">
 
 
-[![](https://img.shields.io/github/license/Open-DataFlow/DataFlow)](https://github.com/Open-DataFlow/DataFlow/blob/main/LICENSE)
-[![](https://img.shields.io/github/stars/Open-DataFlow/DataFlow?style=social)](https://github.com/Open-DataFlow/DataFlow)
-[![](https://img.shields.io/github/issues-raw/Open-DataFlow/DataFlow)](https://github.com/Open-DataFlow/DataFlow/issues)
-[![](https://img.shields.io/github/last-commit/Open-DataFlow/DataFlow)](https://github.com/Open-DataFlow/DataFlow/commits/main/)
-[![](https://img.shields.io/github/contributors/Open-DataFlow/DataFlow)](https://github.com/Open-DataFlow/DataFlow/graphs/contributors)
+[![](https://img.shields.io/github/license/OpenDCAI/DataFlow)](https://github.com/OpenDCAI/DataFlow/blob/main/LICENSE)
+[![](https://img.shields.io/github/stars/OpenDCAI/DataFlow?style=social)](https://github.com/OpenDCAI/DataFlow)
+[![](https://img.shields.io/github/issues-raw/OpenDCAI/DataFlow)](https://github.com/OpenDCAI/DataFlow/issues)
+[![](https://img.shields.io/github/last-commit/OpenDCAI/DataFlow)](https://github.com/OpenDCAI/DataFlow/commits/main/)
+[![](https://img.shields.io/github/contributors/OpenDCAI/DataFlow)](https://github.com/OpenDCAI/DataFlow/graphs/contributors)
 
 [简体中文](./README-zh.md) | English
 
 
-**[Features](#Features) • [Quick Start](#Quick_Start) • [Documentation](https://open-dataflow.github.io/DataFlow-Doc/) • [Experiments](#Experiments)**
+**[Features](#Features) • [Quick Start](#Quick_Start) • [Documentation](https://OpenDCAI.github.io/DataFlow-Doc/) • [Experiments](#Experiments)**
 
 </div>
 
 ## 1 News
-🎉 [2025-06-28] We’re excited to announce that DataFlow, our new data-centric generation and evaluation system, is now open-sourced! Stay tuned for future updates.
+🎉 [2025-06-28] We’re excited to announce that DataFlow, our new data-centric AI generation and evaluation system, is now released! Stay tuned for future updates.
 
 ## 2 Overview
 
   <img src="./static/images/dataflow_framework.jpg">
 
-DataFlow is a data preparation system designed to **process, generate and evaluate** high-quality data from noisy sources (PDF, plain-text, low-quality QA), thereby improving the performance of large language models (LLMs) in specific domains through targeted training (Pre-training, Supervised Fine-tuing, RL training) or RAG using knowledge base cleaning. **DataFlow has been empirically validated to improve domain-oriented LLM's performance in fields such as healthcare, finance, and law.**
+DataFlow is a data preparation and training system designed to **parse, generate, process and evaluate** high-quality data from noisy sources (PDF, plain-text, low-quality QA), thereby improving the performance of large language models (LLMs) in specific domains through targeted training (Pre-training, Supervised Fine-tuing, RL training) or RAG using knowledge base cleaning. **DataFlow has been empirically validated to improve domain-oriented LLM's performance in fields such as healthcare, finance, and law.**
 
-Specifically, we constructing diverse `operators` leveraging rule-based methods, deep learning models, LLMs, and LLM APIs. These operators are systematically integrated into distinct `pipelines`, collectively forming the comprehensive `Dataflow system`. Additionally, we develop an intelligent `Dataflow-agent` capable of dynamically assembling new `pipelines` by recombining existing `operators` on demand.
+Specifically, we constructing diverse `operators` leveraging rule-based methods, deep learning models, LLMs, and LLM APIs. These operators are systematically integrated into distinct `pipelines`, collectively forming the comprehensive `DataFlow system`. Additionally, we develop an intelligent `DataFlow-agent` capable of dynamically assembling new `pipelines` by recombining existing `operators` on demand.
 
 
 
@@ -54,7 +54,7 @@ Current Pipelines in Dataflow are as follows:
 - **Agentic RAG Pipeline**: Identify and extract QA pairs from existing QA datasets or knowledge bases that require external knowledge to answer, for use in downstream training of Agnetic RAG tasks.
 
 ### 3.2 Flexible Operator PipeLines
-In this framework, operators are categorized into Fundamental Operators, Generic Operators, Domain-Specific Operators, and Evaluation Operators, etc., supporting data processing and evaluation functionalities. Please refer to the [documentation](https://open-dataflow.github.io/DataFlow-Doc/) for details.
+In this framework, operators are categorized into Fundamental Operators, Generic Operators, Domain-Specific Operators, and Evaluation Operators, etc., supporting data processing and evaluation functionalities. Please refer to the [documentation](https://OpenDCAI.github.io/DataFlow-Doc/) for details.
 
 ### 3.3 Agent Guided Pipelines
 <!-- Building on top of this, we also provide the -->
@@ -72,12 +72,12 @@ For environment setup and installation, please using the following commands👇
 conda create -n dataflow python=3.10
 conda activate dataflow
 
-git clone https://github.com/Open-DataFlow/DataFlow
+git clone https://github.com/OpenDCAI/DataFlow
 cd DataFlow
 pip install -e .
 ```
 
-For **Quick-Start** and **Guide**, please visit or [Documentation](https://open-dataflow.github.io/DataFlow-Doc/).
+For **Quick-Start** and **Guide**, please visit or [Documentation](https://OpenDCAI.github.io/DataFlow-Doc/).
 
 
 ## 5 Experimental Results
@@ -91,17 +91,19 @@ The `pre-training data processing pipeline` was applied to randomly sampled data
 
 ![alt text](./static/images/text-pretrain.png)
 
+
 #### 5.1.2 SFT data filter pipeline
 We filted 3k record from `alpaca` dataset and compare it with radom selected 3k data from `alpaca` dataset by training it on Qwen2.5-7B. Results are:
+<p align="center">
+  <img src="./static/images/text-sft.png" alt="text-sft" width="80%" />
+</p>
 
-
-![](./static/images/text-sft.png)
 ### 2. Reasoning Pipeline
 
 We verify our reasoning pipeline by SFT on a Qwen2.5-32B-Instruct with Reasoning Pipeline synsthized data. We generated 1k and 5k SFT data pairs. Results are: 
-
-![alt text](./static/images/reasoning_performance.png)
-
+<p align="center">
+  <img src="./static/images/reasoning_performance.png" alt="text-sft" width="80%" />
+</p>
 
 
 ### 3. Text2SQL PipeLine
@@ -109,11 +111,11 @@ We fine-tuned the Qwen2.5-Coder-7B model on the Bird dataset using both Supervis
 ![alt text](./static/images/text2sql.png)
 
 <!-- ## Statistics
-<a href="https://star-history.com/#Open-DataFlow/DataFlow&Date">
+<a href="https://star-history.com/#OpenDCAI/DataFlow&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Open-DataFlow/DataFlow&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Open-DataFlow/DataFlow&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Open-DataFlow/DataFlow&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=OpenDCAI/DataFlow&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=OpenDCAI/DataFlow&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=OpenDCAI/DataFlow&type=Date" />
  </picture>
 </a>
  -->
