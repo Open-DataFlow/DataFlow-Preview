@@ -83,6 +83,8 @@ class KBCleaningPipeline():
             input_key="cleaned",
             output_key="MultiHop_QA"
         )
-model = KBCleaningPipeline()
-model.forward(url="https://trafilatura.readthedocs.io/en/latest/quickstart.html")
+
+if __name__ == "__main__":
+    model = KBCleaningPipeline()
+    model.forward(url="https://trafilatura.readthedocs.io/en/latest/quickstart.html")
 

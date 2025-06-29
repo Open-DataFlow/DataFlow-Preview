@@ -81,6 +81,8 @@ class KBCleaningPipeline():
             input_key="cleaned",
             output_key="MultiHop_QA"
         )
-model = KBCleaningPipeline()
-model.forward(raw_file="/data0/hzy/DataFlow-Preview/dataflow/example/KBCleaningPipeline/test.doc")
+
+if __name__ == "__main__":
+    model = KBCleaningPipeline()
+    model.forward(raw_file="/data0/hzy/DataFlow-Preview/dataflow/example/KBCleaningPipeline/test.doc")
 
