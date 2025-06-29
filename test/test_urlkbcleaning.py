@@ -6,6 +6,7 @@ from dataflow.operators.generate.KnowledgeCleaning import (
     CorpusTextSplitter,
     KnowledgeExtractor,
     KnowledgeCleaner,
+    MultiHopQAGenerator,
 )
 from dataflow.utils.storage import FileStorage
 from dataflow.llmserving import LocalModelLLMServing
@@ -15,10 +16,10 @@ class KBCleaningPipeline():
     def __init__(self):
 
         self.storage = FileStorage(
-            first_entry_file_name="dataflow/example/KBCleaningPipeline/pdf_test.json",
+            first_entry_file_name="dataflow/example/KBCleaningPipeline/kbc_placeholder.json",
             cache_path="./.cache",
-            file_name_prefix="pdf_cleaning_step",
-            cache_type="jsonl",
+            file_name_prefix="url_cleaning_step",
+            cache_type="json",
         )
 
         # api_llm_serving = APILLMServing_request(
@@ -33,6 +34,7 @@ class KBCleaningPipeline():
             tensor_parallel_size=4,
             model_source="local",
             gpu_memory_utilization=0.6,
+            repetition_penalty=1.2
         )
 
         self.knowledge_cleaning_step1 = KnowledgeExtractor(
@@ -47,15 +49,21 @@ class KBCleaningPipeline():
 
         self.knowledge_cleaning_step3 = KnowledgeCleaner(
             llm_serving=local_llm_serving,
-            lang="zh"
+            lang="en"
         )
+
+        self.knowledge_cleaning_step4 = MultiHopQAGenerator(
+            llm_serving=local_llm_serving,
+            lang="en"
+        )
+
         # 未来或许可以维护一个类似nn.sequential的容器，方便添加并实例化多个算子
     def forward(self, url:str=None, raw_file:str=None):
         extracted=self.knowledge_cleaning_step1.run(
             storage=self.storage,
             raw_file=raw_file,
             url=url,
-            lang="ch"
+            lang="en"
         )
         
         self.knowledge_cleaning_step2.run(
@@ -69,8 +77,14 @@ class KBCleaningPipeline():
             input_key= "raw_content",
             output_key="cleaned",
         )
-        
+
+        self.knowledge_cleaning_step4.run(
+            storage=self.storage.step(),
+            input_key="cleaned",
+            output_key="MultiHop_QA"
+        )
+
 if __name__ == "__main__":
     model = KBCleaningPipeline()
-    model.forward(raw_file="/data0/hzy/DataFlow-Preview/test_mineru/muban.pdf")
+    model.forward(url="https://trafilatura.readthedocs.io/en/latest/quickstart.html")
 
