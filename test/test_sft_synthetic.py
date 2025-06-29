@@ -224,6 +224,8 @@ class SFTTextSynPipeline():
             input_instruction_key='instruction',
             input_output_key='output'
         )
+if __name__ == "__main__":
+    # This is the entry point for the pipeline
 
-model = SFTTextSynPipeline()
-model.forward()
+    model = SFTTextSynPipeline()
+    model.forward()

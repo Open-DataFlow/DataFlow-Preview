@@ -1,4 +1,3 @@
- 
 from dataflow.operators.process.GeneralText import DeitaComplexityFilter
 
 from dataflow.utils.storage import FileStorage
@@ -18,6 +17,6 @@ class TextPipeline():
         self.scorer1.run(
             storage = self.storage.step()
         )
-
-model = TextPipeline()
-model.forward()
+if __name__ == "__main__":
+    model = TextPipeline()
+    model.forward()

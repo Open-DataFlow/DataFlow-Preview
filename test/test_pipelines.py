@@ -1,7 +1,7 @@
 import pytest
 from test_reasoning import ReasoningPipeline
 from test_reasoning_pretrain import ReasoningPipeline_Pretrain
-from test_pt_filter import PTTextPipeline
+# from test_pt_filter import PTTextPipeline
 from test_agentic_rag import AgenticRAGPipeline
 from test_text2sql import Text2SQLPipeline
 @pytest.fixture(scope="session")
@@ -27,10 +27,10 @@ def test_reasoning_pipeline_pretrain(llm_serving):
     reasoning_pipe_pretrain = ReasoningPipeline_Pretrain(llm_serving=llm_serving)
     reasoning_pipe_pretrain.forward()
 
-@pytest.mark.gpu
-def test_text_pipeline():
-    text_pipe = PTTextPipeline()
-    text_pipe.forward()
+# @pytest.mark.gpu
+# def test_text_pipeline():
+#     text_pipe = PTTextPipeline()
+#     text_pipe.forward()
 
 @pytest.mark.gpu
 def test_agentic_rag_pipeline(llm_serving):

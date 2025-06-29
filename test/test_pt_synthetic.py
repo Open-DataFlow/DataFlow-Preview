@@ -199,6 +199,6 @@ class PTTextSynPipeline():
             storage=self.storage.step(),
             input_key='generated_content'
         )
-
-model = PTTextSynPipeline()
-model.forward()
+if __name__ == "__main__":
+    model = PTTextSynPipeline()
+    model.forward()
