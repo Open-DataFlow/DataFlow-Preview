@@ -4,23 +4,26 @@ from dataflow.utils.storage import DataFlowStorage
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import numpy as np
 from scipy.special import softmax
+from dataflow import get_logger
 import torch
 from tqdm import tqdm
 
 @OPERATOR_REGISTRY.register()
 class DeitaComplexityScorer(OperatorABC):
-    def __init__(self, model_name="hkust-nlp/deita-complexity-scorer", model_cache_dir=None, device=None, max_length=512):
+    def __init__(self, device=None, model_cache_dir=None, max_length=512):
         # Initialize model, tokenizer, and device
         self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model_name = model_name
+        self.model_name = "hkust-nlp/deita-complexity-scorer"
         self.model_cache_dir = model_cache_dir
         self.max_length = max_length
-        self.batch_size = 1
-        self.score_type = float  
-        self.data_type = 'text'  
-        self.score_name = 'DeitaComplexityScore'  
+        self.logger = get_logger()
+        self.logger.info(f"Using local model: {self.model_name}")
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=self.model_cache_dir)
         self.model = AutoModelForCausalLM.from_pretrained(self.model_name, cache_dir=self.model_cache_dir).to(self.device)
+
+    @staticmethod
+    def get_desc(self, lang):
+        return "使用Deita指令复杂度分类器评估指令复杂度" if lang == "zh" else "Evaluate instruction complexity using the Deita instruction complexity classifier."
 
     def infer_complexity(self, input_text):
         # Format the input for the model
@@ -55,25 +58,27 @@ class DeitaComplexityScorer(OperatorABC):
         final_score = np.sum(score_npy, axis=0)  # Sum the weighted scores to get the final score
         return final_score
 
-    def eval(self, dataframe, input_key):
-        # Evaluate the complexity score for each text in the dataframe
+    def eval(self, dataframe, input_instruction_key: str = 'instruction', input_output_key: str = 'output'):
+        # Evaluate the quality score for each row in the dataframe
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=self.model_cache_dir)
+        self.model = AutoModelForCausalLM.from_pretrained(self.model_name, cache_dir=self.model_cache_dir).to(self.device)
         scores = []
-        for sample in tqdm(dataframe[input_key], desc="DeitaComplexityScorer Evaluating..."):
-            complexity_score = self.infer_complexity(sample)
-            scores.append(complexity_score)
+        for sample in tqdm(dataframe[[input_instruction_key, input_output_key]].to_dict(orient='records'), desc="DeitaQualityScorer Evaluating..."):
+            quality_score = self.infer_complexity(sample[input_instruction_key])  # assuming response and instruction are the same for now
+            scores.append(quality_score)
+        del self.tokenizer
+        del self.model
+        import gc;
+        gc.collect()
+        torch.cuda.empty_cache()
+        # Return as multiple columns
         return scores
 
-    def run(self, storage: DataFlowStorage, input_key: str, output_key: str):
-        # Read the data, compute complexity scores, and write the results
-        dataframe = storage.read("dataframe")  # Read dataframe from storage
-        scores = self.eval(dataframe, input_key)  # Evaluate the complexity scores
+    def run(self, storage: DataFlowStorage, input_instruction_key: str = 'instruction', input_output_key: str = 'output', output_key: str = 'deita_complexity_score'):
+        # Read the dataframe, evaluate scores, and store results
+        dataframe = storage.read("dataframe")
+        scores = self.eval(dataframe, input_instruction_key, input_output_key)
         
-        # Flatten the nested result and write it to the output_key in the dataframe
-        for i, score in enumerate(scores):
-            for j, value in enumerate(score):
-                column_name = f"{output_key}_{j+1}"  # Name each complexity level as separate columns
-                if column_name not in dataframe:
-                    dataframe[column_name] = []
-                dataframe[column_name].append(value)
-
-        storage.write(dataframe)  # Write the updated dataframe back to storage
+        # Flatten results and write them to output_key in the dataframe
+        dataframe[output_key] = scores        
+        storage.write(dataframe)

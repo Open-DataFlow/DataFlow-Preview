@@ -93,7 +93,7 @@ def hdd(word_array, sample_size=42.0):
 class LexicalDiversityScorer(OperatorABC):
     def __init__(self, metrics_to_keep=None):
         self.logger = get_logger()
-        self.metrics_to_keep = metrics_to_keep or {}
+        self.metrics_to_keep = {'mtld': True, 'hdd': True}
     
     @staticmethod
     def get_desc(self, lang):
@@ -126,16 +126,15 @@ class LexicalDiversityScorer(OperatorABC):
             scores_list.append(scores)
         return scores_list
     
-    def run(self, storage: DataFlowStorage, input_key: str, output_key: str):
+    def run(self, storage: DataFlowStorage, input_key: str):
         self.input_key = input_key
-        self.output_key = output_key
         dataframe = storage.read("dataframe")
         self.logger.info("LexicalDiversityScore ready to evaluate.")
         
         scores = self.eval(dataframe, input_key)
         # Flatten the nested dictionary of scores into the dataframe
-        for score_dict in scores:
+        for idx, score_dict in enumerate(scores):
             for key, value in score_dict.items():
-                dataframe[key] = value
+                dataframe.at[idx, key] = value
         storage.write(dataframe)
 

@@ -1,4 +1,4 @@
-from dataflow.operators.eval.GeneralText import DeitaQualityScorer
+from dataflow.operators.eval.GeneralText import DeitaComplexityScorer
 from dataflow.core import OperatorABC
 import numpy as np
 from dataflow.utils.registry import OPERATOR_REGISTRY
@@ -6,12 +6,12 @@ from dataflow.utils.utils import get_logger
 from dataflow.utils.storage import DataFlowStorage
 
 @OPERATOR_REGISTRY.register()
-class DeitaQualityFilter(OperatorABC):
-    def __init__(self, min_score=2.5, max_score=10000.0, device='cuda', model_cache_dir='./dataflow_cache', max_length=512):
+class DeitaComplexityFilter(OperatorABC):
+    def __init__(self, min_score=3.0, max_score=5.0, device='cuda', model_cache_dir='./dataflow_cache', max_length=512):
         self.logger = get_logger()
         self.min_score = min_score
         self.max_score = max_score
-        self.scorer = DeitaQualityScorer(
+        self.scorer = DeitaComplexityScorer(
             device=device,
             model_cache_dir=model_cache_dir,
             max_length=max_length,
@@ -22,15 +22,6 @@ class DeitaQualityFilter(OperatorABC):
     @staticmethod
     def get_desc(self, lang):
         return "使用Deita指令质量分类器过滤掉低质量指令数据" if lang == "zh" else "Filter out low-quality instruction data using the Deita instruction quality classifier."
-
-    # def eval(self, dataframe, input_key):
-    #     self.logger.info(f"Start evaluating {self.__class__.__name__}...")
-
-    #     # Get the scores using the scorer
-    #     _, scores = self.scorer(dataframe[input_key])
-
-    #     # Retrieve the quality scores (assuming 'Default' is the relevant column for scores)
-    #     return scores['Default']
 
     def run(self, storage: DataFlowStorage, input_instruction_key: str = 'instruction', input_output_key : str = 'output', output_key: str = "deita_quality_filter_label"):
         self.input_instruction_key = input_instruction_key

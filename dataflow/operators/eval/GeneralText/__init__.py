@@ -8,12 +8,12 @@ from .models.debertav3_scorer import DebertaV3Scorer
 from .models.deita_complexity_scorer import DeitaComplexityScorer
 from .models.fineweb_edu_scorer import FineWebEduScorer
 from .models.pair_qual_scorer import PairQualScorer
-from .models.presidio_scorer import PresidioScorer
-from .models.rm_scorer import RMScorer
+# from .models.presidio_scorer import PresidioScorer
+# from .models.rm_scorer import RMScorer
 from .models.textbook_scorer import TextbookScorer
 from .models.superfiltering_scorer import SuperfilteringScorer
 from .models.qurating_scorer import QuratingScorer
-from .models.perplexity_scorer import PerplexityScorer
+# from .models.perplexity_scorer import PerplexityScorer
 
 __all__ = [
     'NgramScorer',
@@ -26,9 +26,9 @@ __all__ = [
     'FineWebEduScorer',
     'PairQualScorer',
     'PresidioScorer',
-    'RMScorer',
+    # 'RMScorer',
     'TextbookScorer',
     'SuperfilteringScorer',
     'QuratingScorer',
-    'PerplexityScorer'
+    # 'PerplexityScorer'
 ]

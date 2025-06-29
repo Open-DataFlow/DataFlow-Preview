@@ -1,6 +1,7 @@
 from .filters.ngram_filter import NgramFilter
 from .filters.language_filter import LanguageFilter
 from .filters.deita_quality_filter import DeitaQualityFilter
+from .filters.deita_complexity_filter import DeitaComplexityFilter
 from .filters.instag_filter import InstagFilter
 from .filters.pair_qual_filter import PairQualFilter
 from .filters.qurating_filter import QuratingFilter
@@ -44,6 +45,7 @@ __all__ = [
     'MinHashDeduplicator',
     'FineWebEduFilter',
     'TextbookFilter',
+    'DeitaComplexityFilter',
     # Heuristic Filters
     'ColonEndFilter',
     'WordNumberFilter',

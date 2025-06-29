@@ -8,11 +8,10 @@ from tqdm import tqdm
 
 @OPERATOR_REGISTRY.register()
 class LangkitScorer(OperatorABC):
-    def __init__(self, metrics_to_keep=None):
+    def __init__(self):
         self.logger = get_logger()
         self.llm_schema = light_metrics.init()
-        self.metrics_to_keep = metrics_to_keep or {}
-    
+
     @staticmethod
     def get_desc(self, lang):
         return NotImplementedError("The description of LangkitScorer is not implemented!")
@@ -38,10 +37,6 @@ class LangkitScorer(OperatorABC):
         # Remove unwanted keys
         processed_scores.pop('has_patterns', None)
 
-        # Filter metrics to keep
-        if self.metrics_to_keep:
-            processed_scores = {k: v for k, v in processed_scores.items() if self.metrics_to_keep.get(k, True)}
-
         # Create final result dictionary
         result = {}
         for k, v in processed_scores.items():
@@ -57,17 +52,14 @@ class LangkitScorer(OperatorABC):
             scores_list.append(scores)
         return scores_list
     
-    def run(self, storage: DataFlowStorage, input_key: str, output_key: str):
+    def run(self, storage: DataFlowStorage, input_key: str):
         self.input_key = input_key
-        self.output_key = output_key
         dataframe = storage.read("dataframe")
         self.logger.info("LangkitScore ready to evaluate.")
         
         scores = self.eval(dataframe, input_key)
-        
         # Flatten the nested dictionary of scores into the dataframe
-        for score_dict in scores:
+        for idx, score_dict in enumerate(scores):
             for key, value in score_dict.items():
-                dataframe[key] = value
-        
+                dataframe.at[idx, key] = value
         storage.write(dataframe)
