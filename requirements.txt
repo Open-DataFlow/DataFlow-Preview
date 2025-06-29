@@ -31,3 +31,7 @@ langkit
 openai
 sentencepiece
 datasketch
+
+# knowledge base cleaning
+chonkie
+trafilatura
